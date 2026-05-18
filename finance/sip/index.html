@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SIP Calculator | Create Your Investment Link</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .entry-container {
+            max-width: 550px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fun-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .fun-header {
+            margin-bottom: 32px;
+        }
+
+        .fun-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .fun-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .emoji-big {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .funny-msg {
+            background: #fef3c7;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #92400e;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 16px;
+        }
+
+        .quick-share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .share-icon-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .share-icon-btn.whatsapp {
+            background: #25D366;
+            color: white;
+        }
+        .share-icon-btn.telegram {
+            background: #0088cc;
+            color: white;
+        }
+        .share-icon-btn.copy {
+            background: #6366f1;
+            color: white;
+        }
+        .share-icon-btn:hover {
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 550px) {
+            .fun-card {
+                padding: 28px 20px;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="entry-container">
+        <div class="fun-card">
+            <div class="fun-header">
+                <div class="emoji-big">💰✨</div>
+                <h1>SIP Magic Maker</h1>
+                <p>Tell me your numbers, I'll show you the future! 🚀</p>
+            </div>
+
+            <div class="input-group">
+                <label>📅 Monthly SIP Amount (₹)</label>
+                <input type="number" id="sipAmount" placeholder="e.g., 5000" value="5000" step="500">
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>📈 Expected Return (% p.a.)</label>
+                    <input type="number" id="returnRate" placeholder="e.g., 12" value="12" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label>⏰ Period (Years)</label>
+                    <input type="number" id="periodYears" placeholder="e.g., 10" value="10" step="1">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>⚡ Annual Step-up (%) <span style="font-size:12px">(Optional - yearly increase)</span></label>
+                <input type="number" id="stepupPercent" placeholder="e.g., 10" value="0" step="1">
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ Generate My Magic Link ✨</button>
+
+            <div class="funny-msg" id="funnyMsg">
+                🎭 "Investing is like planting a tree — best time was 10 years ago!"
+            </div>
+
+            <div id="quickShareArea"></div>
+
+            <div class="demo-hint">
+                💡 Tip: Click Generate to create a shareable link. The link opens calculator with your exact numbers!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const sipInput = document.getElementById('sipAmount');
+        const returnInput = document.getElementById('returnRate');
+        const yearsInput = document.getElementById('periodYears');
+        const stepupInput = document.getElementById('stepupPercent');
+        const funnyMsgDiv = document.getElementById('funnyMsg');
+        const quickShareArea = document.getElementById('quickShareArea');
+
+        const funnyMessages = [
+            "🎉 Congratulations! You're about to become a crorepati in the making!",
+            "🚀 To the moon! Your investment is ready for blastoff!",
+            "💰 Warren Buffett called. He's impressed with your SIP choice!",
+            "🍕 Your future self will buy 10,000 pizzas with this!",
+            "🏝️ That's not just an SIP, that's a ticket to Bali!",
+            "🦸‍♂️ Even Iron Man would invest this way!",
+            "🎯 Bullseye! Your financial future looks dazzling!",
+            "💎 You've got the diamond hands, my friend!",
+            "🐂 Bulls love this SIP! Keep investing!",
+            "🌟 Your money is going to work harder than you!"
+        ];
+
+        function validateInputs() {
+            let sip = parseFloat(sipInput.value);
+            let ret = parseFloat(returnInput.value);
+            let years = parseInt(yearsInput.value);
+            let stepup = parseFloat(stepupInput.value);
+
+            if (isNaN(sip) || sip < 100) {
+                sipInput.value = 1000;
+                sip = 1000;
+                funnyMsgDiv.innerHTML = "🐣 Starting small? Even ₹1000 is a great start!";
+                return false;
+            }
+            if (isNaN(ret) || ret < 0) {
+                returnInput.value = 12;
+                ret = 12;
+            }
+            if (ret > 30) {
+                returnInput.value = 30;
+                ret = 30;
+            }
+            if (isNaN(years) || years < 1) {
+                yearsInput.value = 5;
+                years = 5;
+            }
+            if (years > 50) yearsInput.value = 50;
+            if (isNaN(stepup)) stepup = 0;
+            if (stepup > 30) stepupInput.value = 30;
+            if (stepup < 0) stepupInput.value = 0;
+            return { sip, ret, years, stepup };
+        }
+
+        function getRandomFunnyMessage() {
+            return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        }
+
+        function generateShareableLink() {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            const { sip, ret, years, stepup } = validated;
+            
+            // Build URL parameters for calculator page
+            const params = new URLSearchParams();
+            params.set('sip', sip);
+            params.set('return', ret);
+            params.set('years', years);
+            if (stepup > 0) params.set('stepup', stepup);
+            
+            // Link to calculator/index.html (or same folder but we assume structure)
+            const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'calculator/index.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            // Show funny message
+            funnyMsgDiv.innerHTML = `🎉 ${getRandomFunnyMessage()}<br>🔗 Link created! Opening in new tab...`;
+            
+            // Open in new tab
+            window.open(fullUrl, '_blank');
+            
+            // Show share buttons
+            quickShareArea.innerHTML = `
+                <div class="quick-share-buttons">
+                    <button class="share-icon-btn whatsapp" id="quickWA">📱 WhatsApp</button>
+                    <button class="share-icon-btn telegram" id="quickTG">✈️ Telegram</button>
+                    <button class="share-icon-btn copy" id="quickCopy">🔗 Copy Link</button>
+                </div>
+            `;
+            
+            document.getElementById('quickWA')?.addEventListener('click', () => {
+                const message = `🚀 *My SIP Investment Plan* 🚀\n\n💰 Monthly: ₹${sip}\n📈 Return: ${ret}% p.a.\n⏰ Period: ${years} years${stepup>0 ? `\n⚡ Step-up: ${stepup}% yearly` : ''}\n\n✨ Check my detailed SIP calculation:`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + fullUrl)}`, '_blank');
+            });
+            
+            document.getElementById('quickTG')?.addEventListener('click', () => {
+                const text = `🚀 *SIP Plan*: ₹${sip} monthly | ${ret}% return | ${years} yrs${stepup>0 ? ` | +${stepup}% step-up` : ''}`;
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(fullUrl)}&text=${encodeURIComponent(text)}`, '_blank');
+            });
+            
+            document.getElementById('quickCopy')?.addEventListener('click', () => {
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    funnyMsgDiv.innerHTML = `✅ Link copied to clipboard! Share it with friends. 🎉`;
+                    setTimeout(() => {
+                        funnyMsgDiv.innerHTML = `✨ ${getRandomFunnyMessage()}`;
+                    }, 3000);
+                });
+            });
+        }
+
+        generateBtn.addEventListener('click', generateShareableLink);
+        
+        // Initial random funny message
+        funnyMsgDiv.innerHTML = `✨ ${getRandomFunnyMessage()}`;
+    </script>
+</body>
+</html>
