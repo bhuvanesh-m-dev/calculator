@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CAGR Calculator | Investment Growth Rate Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #93c5fd;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --bg-gradient: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .title-section h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .title-section p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .home-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            background: var(--primary-dark);
+        }
+
+        .emoji-big {
+            font-size: 48px;
+            margin-right: 12px;
+        }
+
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            margin-top: 20px;
+        }
+
+        .input-panel {
+            flex: 1.2;
+            min-width: 280px;
+        }
+
+        .results-panel {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s;
+        }
+
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .result-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        .chart-container {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+
+        canvas {
+            max-height: 280px;
+            width: 100%;
+        }
+
+        .funny-msg {
+            background: #dbeafe;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #1e3a8a;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-light);
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-card {
+                padding: 24px 20px;
+            }
+            .stat-value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="main-card">
+        <div class="header">
+            <div class="title-section">
+                <div style="display: flex; align-items: center;">
+                    <span class="emoji-big">📊✨</span>
+                    <div>
+                        <h1>CAGR Calculator</h1>
+                        <p>Compound Annual Growth Rate • Measure true investment performance</p>
+                    </div>
+                </div>
+            </div>
+            <button class="home-btn" id="homeBtn">🏠 Home</button>
+        </div>
+
+        <div class="flex-row">
+            <div class="input-panel">
+                <div class="input-group">
+                    <label>💰 Beginning Value (₹)</label>
+                    <input type="number" id="startValue" placeholder="Initial investment amount" value="100000" step="10000">
+                </div>
+                <div class="input-group">
+                    <label>📈 Ending Value (₹)</label>
+                    <input type="number" id="endValue" placeholder="Final value after period" value="250000" step="10000">
+                </div>
+                <div class="input-group">
+                    <label>⏱️ Number of Years</label>
+                    <input type="number" id="years" placeholder="Investment period in years" value="5" step="1" min="0.5">
+                    <div class="input-hint">Can be fractional (e.g., 3.5 years)</div>
+                </div>
+                <button class="calc-btn" id="calcBtn">🚀 Calculate CAGR</button>
+            </div>
+
+            <div class="results-panel">
+                <div class="result-cards">
+                    <div class="stat-card">
+                        <div class="stat-label">Compound Annual Growth</div>
+                        <div class="stat-value" id="cagrValue">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Return</div>
+                        <div class="stat-value" id="totalReturn">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Absolute Gain</div>
+                        <div class="stat-value" id="absoluteGain">₹0</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="funny-msg" id="funnyMsg">
+            💙 CAGR reveals the true smooth growth rate of your investments over time!
+        </div>
+        <div class="footer-note">
+            💡 CAGR smooths out volatility — it shows the constant rate at which your investment would have grown each year.
+        </div>
+    </div>
+</div>
+
+<script>
+    let growthChart = null;
+
+    const funnyMessages = [
+        "📈 Consistent compounding creates wealth — CAGR is your truth meter!",
+        "💙 A 15% CAGR can turn a small seed into a mighty tree!",
+        "🚀 Higher CAGR = faster wealth creation. Keep hunting!",
+        "💰 Warren Buffett's CAGR ~20% for decades. Patience pays!",
+        "📊 CAGR > FD rates? You're beating inflation! 🎉",
+        "🌟 Even 12% CAGR doubles your money every 6 years!",
+        "🏆 Don't chase random returns — focus on sustainable CAGR!"
+    ];
+
+    function formatCurrency(amt) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+    }
+
+    function calculateCAGR(start, end, years) {
+        if (start <= 0 || end <= 0 || years <= 0) return 0;
+        return (Math.pow(end / start, 1 / years) - 1) * 100;
+    }
+
+    function getRandomMessage() {
+        return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+    }
+
+    function updateChart(startVal, endVal, years, cagrPercent) {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        if (growthChart) growthChart.destroy();
+
+        const yearlyPoints = [];
+        const labels = [];
+        for (let i = 0; i <= years; i++) {
+            const value = startVal * Math.pow(1 + cagrPercent / 100, i);
+            yearlyPoints.push(value);
+            labels.push(`Year ${i}`);
+        }
+
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Investment Growth (CAGR Projection)',
+                    data: yearlyPoints,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.2,
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Value: ${formatCurrency(context.raw)}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: (val) => formatCurrency(val)
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function computeAndDisplay() {
+        let start = parseFloat(document.getElementById('startValue').value);
+        let end = parseFloat(document.getElementById('endValue').value);
+        let years = parseFloat(document.getElementById('years').value);
+
+        // Validation
+        if (isNaN(start) || start < 0) {
+            start = 1000;
+            document.getElementById('startValue').value = 1000;
+        }
+        if (isNaN(end) || end < 0) {
+            end = 1000;
+            document.getElementById('endValue').value = 1000;
+        }
+        if (isNaN(years) || years <= 0) {
+            years = 1;
+            document.getElementById('years').value = 1;
+        }
+        if (start === 0) {
+            document.getElementById('cagrValue').innerText = 'N/A';
+            document.getElementById('totalReturn').innerText = 'N/A';
+            document.getElementById('absoluteGain').innerText = 'N/A';
+            document.getElementById('funnyMsg').innerHTML = `⚠️ Starting value cannot be zero! ${getRandomMessage()}`;
+            if (growthChart) growthChart.destroy();
+            return;
+        }
+
+        const cagr = calculateCAGR(start, end, years);
+        const totalReturnPercent = ((end - start) / start) * 100;
+        const absoluteGain = end - start;
+
+        document.getElementById('cagrValue').innerHTML = cagr.toFixed(2) + '%';
+        document.getElementById('totalReturn').innerHTML = totalReturnPercent.toFixed(2) + '%';
+        document.getElementById('absoluteGain').innerHTML = formatCurrency(absoluteGain);
+
+        let message = `📊 CAGR = ${cagr.toFixed(2)}% over ${years} ${years === 1 ? 'year' : 'years'}. `;
+        if (cagr > 15) message += `🔥 Excellent wealth creation! ${getRandomMessage()}`;
+        else if (cagr > 10) message += `👍 Solid returns! ${getRandomMessage()}`;
+        else if (cagr > 6) message += `🌱 Good but can improve. ${getRandomMessage()}`;
+        else message += `💡 ${getRandomMessage()}`;
+        
+        document.getElementById('funnyMsg').innerHTML = `💙 ${message}`;
+
+        // Update chart with projected growth using CAGR
+        updateChart(start, end, years, cagr);
+    }
+
+    // Event Listeners
+    document.getElementById('calcBtn').addEventListener('click', computeAndDisplay);
+    
+    // Real-time update on input change
+    const inputs = ['startValue', 'endValue', 'years'];
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', computeAndDisplay);
+    });
+
+    // Home button: update the URL to your desired home page
+    // Currently pointing to a placeholder - change to https://bhuvanesh-m-dev.github.io/calculator/ when live
+    document.getElementById('homeBtn').addEventListener('click', () => {
+        // Once your main calculator hub is live at the URL below, uncomment the next line
+        // window.location.href = 'https://bhuvanesh-m-dev.github.io/calculator/';
+        
+        // For now, show a friendly alert (since the URL returns 404)
+        alert("🔗 Home page URL: https://bhuvanesh-m-dev.github.io/calculator/\n\nOnce your main hub is live there, this button will take you home.\nCurrently showing this message because the site isn't published yet.");
+        
+        // Optional: You can also redirect to a local index.html if you have one in same folder
+        // window.location.href = 'index.html';
+    });
+
+    // Initial calculation on page load
+    computeAndDisplay();
+</script>
+<img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
