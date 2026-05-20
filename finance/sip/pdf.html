@@ -7,7 +7,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- html2pdf.js for PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
             --primary-color: #3b82f6;
@@ -168,11 +168,17 @@
             transition: all 0.2s ease;
         }
 
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         .btn-primary {
             background: var(--primary-color);
             color: white;
         }
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: var(--primary-dark);
             transform: translateY(-1px);
         }
@@ -188,8 +194,10 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            min-width: 200px;
+            justify-content: center;
         }
-        .btn-download:hover {
+        .btn-download:hover:not(:disabled) {
             background: #0b9e6e;
             transform: translateY(-1px);
         }
@@ -607,15 +615,48 @@
         currentYearsNum = years;
     }
 
-    // PDF Generation using html2pdf with proper options
-    async function generatePDF() {
+    // Function to handle the countdown before generating the PDF
+    function startPdfCountdown() {
         const resultsElement = document.getElementById('resultsArea');
         if (!resultsElement || resultsElement.classList.contains('hidden')) {
             showToast('⚠️ Please calculate SIP first to generate PDF report.');
             return;
         }
+
+        const downloadBtn = document.getElementById('downloadPdfBtn');
+        if (downloadBtn.disabled) return; // Prevent multiple clicks
+
+        let timeLeft = 8;
+        const originalText = downloadBtn.innerHTML;
         
-        // Show loading toast
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+        showToast(`⏳ Your PDF will start downloading in ${timeLeft} seconds.`);
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+            } else {
+                clearInterval(timerInterval);
+                downloadBtn.innerHTML = `📄 Generating...`;
+                
+                // Call the actual PDF generation function
+                executePDFGeneration().then(() => {
+                    // Reset button after successful download
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }).catch(() => {
+                    // Reset button if there was an error
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                });
+            }
+        }, 1000);
+    }
+
+    // Core PDF Generation logic using html2pdf
+    async function executePDFGeneration() {
         showToast('📄 Generating PDF report, please wait...');
         
         // Ensure charts are fully rendered (give a tiny delay)
@@ -658,12 +699,18 @@
         footerDiv.style.pageBreakInside = 'avoid';
 
         const promoImg = document.createElement('img');
-        promoImg.src = 'https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png';
         promoImg.crossOrigin = 'anonymous'; // Ensure html2canvas doesn't taint
         promoImg.style.maxWidth = '100%';
         promoImg.style.borderRadius = '12px';
         promoImg.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         promoImg.style.marginBottom = '15px';
+
+        // Fix: Explicitly wait for the banner image to load before generating the PDF
+        await new Promise((resolve) => {
+            promoImg.onload = resolve;
+            promoImg.onerror = resolve; // Continue even if image fails so it doesn't freeze
+            promoImg.src = 'https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png';
+        });
 
         const creditText = document.createElement('p');
         creditText.style.color = '#64748b';
@@ -693,6 +740,7 @@
         } catch (err) {
             console.error('PDF Error:', err);
             showToast('❌ PDF generation failed. Please try again.');
+            throw err;
         }
     }
 
@@ -799,8 +847,8 @@
         showToast('✅ Link copied! Share your calculations.'); 
     });
     
-    // PDF download button handler
-    document.getElementById('downloadPdfBtn').addEventListener('click', generatePDF);
+    // PDF download button handler linked to the new countdown function
+    document.getElementById('downloadPdfBtn').addEventListener('click', startPdfCountdown);
     
     document.getElementById('enableInflationCheckbox').addEventListener('change', (e) => {
         document.getElementById('inflationDiv').style.display = e.target.checked ? 'inline-block' : 'none';
