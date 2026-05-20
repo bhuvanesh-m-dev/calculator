@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SWP Calculator | Create Your Withdrawal Link</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --secondary: #10b981;
+            --bg: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .entry-container {
+            max-width: 550px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fun-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .fun-header {
+            margin-bottom: 32px;
+        }
+
+        .fun-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .fun-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .emoji-big {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        }
+
+        .funny-msg {
+            background: #fef3c7;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #92400e;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 16px;
+        }
+
+        .quick-share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .share-icon-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .share-icon-btn.whatsapp {
+            background: #25D366;
+            color: white;
+        }
+        .share-icon-btn.telegram {
+            background: #0088cc;
+            color: white;
+        }
+        .share-icon-btn.copy {
+            background: #f59e0b;
+            color: white;
+        }
+        .share-icon-btn:hover {
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 550px) {
+            .fun-card {
+                padding: 28px 20px;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="entry-container">
+        <div class="fun-card">
+            <div class="fun-header">
+                <div class="emoji-big">💸✨</div>
+                <h1>SWP Magic Maker</h1>
+                <p>Plan your monthly income from investments! 🏦</p>
+            </div>
+
+            <div class="input-group">
+                <label>💰 Initial Investment (₹)</label>
+                <input type="number" id="principalAmount" placeholder="e.g., 5000000" value="5000000" step="100000">
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>📅 Monthly Withdrawal (₹)</label>
+                    <input type="number" id="withdrawalAmount" placeholder="e.g., 25000" value="25000" step="1000">
+                </div>
+                <div class="input-group">
+                    <label>📈 Expected Return (% p.a.)</label>
+                    <input type="number" id="annualReturn" placeholder="e.g., 12" value="12" step="0.5">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>⏰ Period (Years)</label>
+                    <input type="number" id="periodYears" placeholder="e.g., 20" value="20" step="1">
+                </div>
+                <div class="input-group">
+                    <label>📊 Inflation/Step-up (%)</label>
+                    <input type="number" id="stepupPercent" placeholder="e.g., 5" value="0" step="0.5">
+                    <span style="font-size:11px; color:#6b7280;">Yearly increase in withdrawal</span>
+                </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ Generate My SWP Link ✨</button>
+
+            <div class="funny-msg" id="funnyMsg">
+                🎭 "Passive income is the dream — SWP makes it real!"
+            </div>
+
+            <div id="quickShareArea"></div>
+
+            <div class="demo-hint">
+                💡 Tip: SWP lets you withdraw monthly while your money grows. Generate a link and share with friends!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const principalInput = document.getElementById('principalAmount');
+        const withdrawalInput = document.getElementById('withdrawalAmount');
+        const returnInput = document.getElementById('annualReturn');
+        const yearsInput = document.getElementById('periodYears');
+        const stepupInput = document.getElementById('stepupPercent');
+        const funnyMsgDiv = document.getElementById('funnyMsg');
+        const quickShareArea = document.getElementById('quickShareArea');
+
+        const funnyMessages = [
+            "🎉 Congratulations! You're setting up your passive income stream!",
+            "💸 Retire early? This SWP is your golden ticket!",
+            "🏖️ Beach life funded! Your monthly withdrawal is ready!",
+            "💰 Even Warren Buffett approves this withdrawal plan!",
+            "🍷 That's not just an SWP, that's a lifestyle upgrade!",
+            "🦸‍♂️ Financial freedom, here you come!",
+            "🎯 Smart move! Let your money work for you!",
+            "💎 Steady income while your corpus grows — Genius!"
+        ];
+
+        function validateInputs() {
+            let principal = parseFloat(principalInput.value);
+            let withdrawal = parseFloat(withdrawalInput.value);
+            let ret = parseFloat(returnInput.value);
+            let years = parseInt(yearsInput.value);
+            let stepup = parseFloat(stepupInput.value);
+
+            if (isNaN(principal) || principal < 10000) {
+                principalInput.value = 1000000;
+                principal = 1000000;
+                funnyMsgDiv.innerHTML = "🐣 Starting with ₹10L? Great foundation!";
+                return false;
+            }
+            if (isNaN(withdrawal) || withdrawal < 500) {
+                withdrawalInput.value = 5000;
+                withdrawal = 5000;
+            }
+            if (isNaN(ret) || ret < 0) {
+                returnInput.value = 12;
+                ret = 12;
+            }
+            if (ret > 30) {
+                returnInput.value = 30;
+                ret = 30;
+            }
+            if (isNaN(years) || years < 1) {
+                yearsInput.value = 10;
+                years = 10;
+            }
+            if (years > 50) yearsInput.value = 50;
+            if (isNaN(stepup)) stepup = 0;
+            if (stepup > 20) stepupInput.value = 20;
+            if (stepup < 0) stepupInput.value = 0;
+            return { principal, withdrawal, ret, years, stepup };
+        }
+
+        function getRandomFunnyMessage() {
+            return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        }
+
+        function generateShareableLink() {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            const { principal, withdrawal, ret, years, stepup } = validated;
+            
+            // Build URL parameters for calculator page
+            const params = new URLSearchParams();
+            params.set('principal', principal);
+            params.set('withdrawal', withdrawal);
+            params.set('return', ret);
+            params.set('years', years);
+            if (stepup > 0) params.set('stepup', stepup);
+            
+            // Link to calculator.html (same folder)
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            // Show funny message
+            funnyMsgDiv.innerHTML = `🎉 ${getRandomFunnyMessage()}<br>🔗 Link created! Opening in new tab...`;
+            
+            // Open in new tab
+            window.open(fullUrl, '_blank');
+            
+            // Show share buttons
+            quickShareArea.innerHTML = `
+                <div class="quick-share-buttons">
+                    <button class="share-icon-btn whatsapp" id="quickWA">📱 WhatsApp</button>
+                    <button class="share-icon-btn telegram" id="quickTG">✈️ Telegram</button>
+                    <button class="share-icon-btn copy" id="quickCopy">🔗 Copy Link</button>
+                </div>
+            `;
+            
+            document.getElementById('quickWA')?.addEventListener('click', () => {
+                const message = `💸 *My SWP Retirement Plan* 💸\n\n💰 Initial Corpus: ₹${principal.toLocaleString()}\n📅 Monthly Withdrawal: ₹${withdrawal.toLocaleString()}\n📈 Return: ${ret}% p.a.\n⏰ Period: ${years} years${stepup>0 ? `\n📊 Step-up: ${stepup}% yearly` : ''}\n\n✨ Check my SWP calculation:`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + fullUrl)}`, '_blank');
+            });
+            
+            document.getElementById('quickTG')?.addEventListener('click', () => {
+                const text = `💸 *SWP Plan*: ₹${principal.toLocaleString()} corpus | ₹${withdrawal.toLocaleString()}/month | ${ret}% return | ${years} yrs${stepup>0 ? ` | +${stepup}% step-up` : ''}`;
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(fullUrl)}&text=${encodeURIComponent(text)}`, '_blank');
+            });
+            
+            document.getElementById('quickCopy')?.addEventListener('click', () => {
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    funnyMsgDiv.innerHTML = `✅ Link copied to clipboard! Share it with friends. 🎉`;
+                    setTimeout(() => {
+                        funnyMsgDiv.innerHTML = `✨ ${getRandomFunnyMessage()}`;
+                    }, 3000);
+                });
+            });
+        }
+
+        generateBtn.addEventListener('click', generateShareableLink);
+        
+        // Initial random funny message
+        funnyMsgDiv.innerHTML = `✨ ${getRandomFunnyMessage()}`;
+    </script>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>

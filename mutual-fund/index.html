@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Mutual Fund SIP Analyzer | Expense Ratio & Inflation Adjusted</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #93c5fd;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #fff, #e0e7ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: none;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        /* Main Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .expense-hint {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Results styling */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-top: 6px;
+            word-break: break-word;
+        }
+
+        .impact-badge {
+            background: #fef3c7;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--warning);
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            height: 260px;
+        }
+
+        canvas {
+            max-height: 260px;
+            width: 100%;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-top: 20px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        th {
+            background: var(--card-bg);
+            position: sticky;
+            top: 0;
+        }
+
+        .share-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 8px 20px;
+            border-radius: 40px;
+            background: #eef2ff;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .share-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .footnote {
+            text-align: center;
+            margin-top: 30px;
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .highlight {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        @media (max-width: 550px) {
+            .card { padding: 20px; }
+            .results-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 MF SIP Analyzer</h1>
+        <p>Mutual Fund returns · Expense Ratio impact · Inflation adjusted reality</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Input Panel -->
+        <div class="card">
+            <div class="card-title">📝 Investment Parameters</div>
+            
+            <div class="input-group">
+                <label>💰 Monthly SIP Amount (₹)</label>
+                <input type="number" id="sipAmount" value="5000" step="500">
+            </div>
+
+            <div class="input-group">
+                <label>📈 Expected Gross Return (% p.a.)</label>
+                <input type="number" id="grossReturn" value="14" step="0.5">
+                <div class="expense-hint">Before expense ratio (fund's historical return)</div>
+            </div>
+
+            <div class="input-group">
+                <label>📉 Expense Ratio (% p.a.)</label>
+                <input type="number" id="expenseRatio" value="1.0" step="0.1">
+                <div class="expense-hint">Typical: Active funds 0.8%–2%, Index funds 0.2%–0.5%</div>
+            </div>
+
+            <div class="input-group">
+                <label>⏰ Time Period (Years)</label>
+                <input type="number" id="years" value="15" step="1">
+            </div>
+
+            <div class="input-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="input-group">
+                    <label>📊 Step-up (% yearly)</label>
+                    <input type="number" id="stepup" value="10" step="1">
+                </div>
+                <div class="input-group">
+                    <label>💵 Lump Sum (₹)</label>
+                    <input type="number" id="lumpsum" value="0" step="10000">
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="enableInflation"> 🧮 Adjust for Inflation
+                </label>
+                <div id="inflationInputDiv" style="display: none; flex:1;">
+                    <input type="number" id="inflationRate" placeholder="Inflation %" value="6" step="0.5" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border);">
+                </div>
+            </div>
+
+            <button class="calc-btn" id="calculateBtn">✨ Calculate & Analyze Impact ✨</button>
+            <div id="quickTip" style="margin-top: 16px; font-size: 12px; background: #eef2ff; padding: 10px; border-radius: 16px; text-align: center;">
+                💡 Higher expense ratio silently eats up to 30% of your final returns over long term!
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="card" id="resultsPanel" style="display: none;">
+            <div class="card-title">📈 Wealth Projection</div>
+            
+            <div class="results-grid">
+                <div class="stat-card"><div class="stat-label">💰 Total Invested</div><div class="stat-value" id="totalInvested">-</div></div>
+                <div class="stat-card"><div class="stat-label">📈 Net Gains (After ER)</div><div class="stat-value" id="totalGains">-</div></div>
+                <div class="stat-card"><div class="stat-label">🏆 Final Corpus</div><div class="stat-value" id="finalCorpus">-</div></div>
+                <div class="stat-card"><div class="stat-label">📉 Inflation Adj. Value</div><div class="stat-value" id="inflationAdj">-</div></div>
+            </div>
+
+            <div id="expenseImpactMsg" class="impact-badge">
+                ⚠️ Loading impact analysis...
+            </div>
+
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="yearlyTable">
+                    <thead>
+                        <tr><th>Year</th><th>Yearly SIP</th><th>Invested (Cumul)</th><th>Net Return (Year)</th><th>Balance</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="share-row">
+                <button class="share-btn" id="shareWhatsApp">📱 WhatsApp</button>
+                <button class="share-btn" id="copyLinkBtn">🔗 Copy Shareable Link</button>
+            </div>
+        </div>
+    </div>
+    <div class="footnote">
+        💡 Net Return = Gross Return – Expense Ratio. SIP step-up compounds wealth. Results are projections, not guaranteed.
+    </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+    let growthChart = null;
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function formatCurrency(amt) {
+        if (isNaN(amt)) return '₹0';
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.round(amt));
+    }
+
+    // Core calculation: SIP + step-up + lumpsum, with expense ratio (net monthly return)
+    function calculateMutualFundSIP(sipMonthly, grossAnnualReturn, expenseRatio, years, stepupPercent, lumpsum) {
+        // net annual return = gross - expense
+        let netAnnualReturn = Math.max(0, grossAnnualReturn - expenseRatio);
+        let monthlyRate = netAnnualReturn / 12 / 100;
+        let totalMonths = years * 12;
+        let balance = lumpsum;
+        let totalInvested = lumpsum;
+        let currentSIP = sipMonthly;
+        let yearlyRecords = [];
+        
+        let monthCounter = 0;
+        for (let y = 1; y <= years; y++) {
+            let yearlySipTotal = 0;
+            let yearlyInterest = 0;
+            let startBalance = balance;
+            
+            for (let m = 1; m <= 12; m++) {
+                if (monthCounter >= totalMonths) break;
+                // interest on existing balance
+                let interest = balance * monthlyRate;
+                balance += interest;
+                yearlyInterest += interest;
+                // add SIP at month end
+                balance += currentSIP;
+                yearlySipTotal += currentSIP;
+                totalInvested += currentSIP;
+                monthCounter++;
+            }
+            
+            yearlyRecords.push({
+                year: y,
+                yearlySipAmount: yearlySipTotal,
+                totalInvestedSoFar: totalInvested,
+                yearlyReturnEarned: yearlyInterest,
+                endBalance: balance
+            });
+            
+            // step-up for next year (except last)
+            if (y < years && stepupPercent > 0) {
+                currentSIP = currentSIP * (1 + stepupPercent / 100);
+            }
+        }
+        
+        let totalGains = balance - totalInvested;
+        return { balance, totalInvested, totalGains, yearlyRecords, netAnnualReturn };
+    }
+
+    // Inflation adjustment (present value)
+    function getInflationAdjustedValue(futureValue, inflationRate, years) {
+        if (!inflationRate || inflationRate <= 0) return futureValue;
+        let factor = Math.pow(1 + inflationRate / 100, years);
+        return futureValue / factor;
+    }
+
+    // Update charts and tables
+    function updateUI(result, yearlyData, inflationAdjValue, inflationRate, grossReturn, expenseRatio) {
+        document.getElementById('totalInvested').innerHTML = formatCurrency(result.totalInvested);
+        document.getElementById('totalGains').innerHTML = formatCurrency(result.totalGains);
+        document.getElementById('finalCorpus').innerHTML = formatCurrency(result.balance);
+        document.getElementById('inflationAdj').innerHTML = formatCurrency(inflationAdjValue);
+        
+        // Expense impact message: compare without expense ratio (gross scenario)
+        let grossScenario = calculateMutualFundSIP(
+            parseFloat(document.getElementById('sipAmount').value),
+            grossReturn, 0, 
+            parseFloat(document.getElementById('years').value),
+            parseFloat(document.getElementById('stepup').value) || 0,
+            parseFloat(document.getElementById('lumpsum').value) || 0
+        );
+        let lossAmount = grossScenario.balance - result.balance;
+        let lossPercent = (lossAmount / grossScenario.balance) * 100;
+        
+        const impactDiv = document.getElementById('expenseImpactMsg');
+        impactDiv.innerHTML = `⚠️ <strong>Expense Ratio Impact:</strong> Over ${result.yearlyRecords.length} years, ${expenseRatio}% fees reduce your final corpus by <span class="highlight">${formatCurrency(lossAmount)}</span> (${lossPercent.toFixed(1)}% of potential wealth). Lower expense ratios = significantly higher returns! 📉`;
+        
+        // Populate yearly table
+        const tbody = document.querySelector('#yearlyTable tbody');
+        tbody.innerHTML = '';
+        yearlyData.forEach(row => {
+            tbody.innerHTML += `<tr>
+                <td>${row.year}</td>
+                <td>${formatCurrency(row.yearlySipAmount)}</td>
+                <td>${formatCurrency(row.totalInvestedSoFar)}</td>
+                <td>${formatCurrency(row.yearlyReturnEarned)}</td>
+                <td>${formatCurrency(row.endBalance)}</td>
+            </tr>`;
+        });
+        
+        // Line Chart: Corpus Growth
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        if (growthChart) growthChart.destroy();
+        
+        const yearsLabels = yearlyData.map(d => `Y${d.year}`);
+        const corpusValues = yearlyData.map(d => d.endBalance);
+        const investedValues = yearlyData.map(d => d.totalInvestedSoFar);
+        
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: yearsLabels,
+                datasets: [
+                    { label: 'Corpus (After Expense Ratio)', data: corpusValues, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.05)', fill: true, tension: 0.3, borderWidth: 3 },
+                    { label: 'Total Invested', data: investedValues, borderColor: '#f59e0b', borderDash: [6, 8], fill: false, tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } }
+                },
+                scales: { y: { ticks: { callback: (val) => formatCurrency(val) } } }
+            }
+        });
+        
+        document.getElementById('resultsPanel').style.display = 'block';
+    }
+
+    // Main calculation and URL update
+    function runCalculationAndShare() {
+        let sip = parseFloat(document.getElementById('sipAmount').value);
+        let grossReturn = parseFloat(document.getElementById('grossReturn').value);
+        let expenseRatio = parseFloat(document.getElementById('expenseRatio').value);
+        let years = parseInt(document.getElementById('years').value);
+        let stepup = parseFloat(document.getElementById('stepup').value) || 0;
+        let lumpsum = parseFloat(document.getElementById('lumpsum').value) || 0;
+        let inflationEnabled = document.getElementById('enableInflation').checked;
+        let inflationRate = parseFloat(document.getElementById('inflationRate').value) || 0;
+        
+        // Validations
+        if (isNaN(sip) || sip < 100) { showToast('Minimum SIP amount is ₹100'); document.getElementById('sipAmount').value = 500; sip = 500; }
+        if (isNaN(grossReturn) || grossReturn < 0) grossReturn = 8;
+        if (grossReturn > 35) grossReturn = 35;
+        if (isNaN(expenseRatio) || expenseRatio < 0) expenseRatio = 0;
+        if (expenseRatio > 5) expenseRatio = 5;
+        if (isNaN(years) || years < 1) years = 1;
+        if (years > 50) years = 50;
+        if (stepup < 0) stepup = 0;
+        if (stepup > 30) stepup = 30;
+        if (lumpsum < 0) lumpsum = 0;
+        if (inflationRate < 0) inflationRate = 0;
+        if (inflationRate > 20) inflationRate = 20;
+        
+        // net return cannot be negative
+        let netReturn = grossReturn - expenseRatio;
+        if (netReturn < 0) {
+            showToast('⚠️ Expense ratio exceeds gross return! Net return would be negative. Reducing expense ratio temporarily.');
+            expenseRatio = Math.max(0, grossReturn - 0.5);
+            document.getElementById('expenseRatio').value = expenseRatio;
+        }
+        
+        const result = calculateMutualFundSIP(sip, grossReturn, expenseRatio, years, stepup, lumpsum);
+        let inflationAdjValue = result.balance;
+        if (inflationEnabled && inflationRate > 0) {
+            inflationAdjValue = getInflationAdjustedValue(result.balance, inflationRate, years);
+        }
+        
+        updateUI(result, result.yearlyRecords, inflationAdjValue, inflationEnabled ? inflationRate : 0, grossReturn, expenseRatio);
+        
+        // Update URL parameters for shareable link
+        const urlParams = new URLSearchParams();
+        urlParams.set('sip', sip);
+        urlParams.set('gross', grossReturn);
+        urlParams.set('er', expenseRatio);
+        urlParams.set('years', years);
+        if (stepup > 0) urlParams.set('step', stepup);
+        if (lumpsum > 0) urlParams.set('lumpsum', lumpsum);
+        if (inflationEnabled && inflationRate > 0) {
+            urlParams.set('inf', inflationRate);
+            urlParams.set('adj_inf', '1');
+        }
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Load values from URL parameters
+    function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('sip')) document.getElementById('sipAmount').value = params.get('sip');
+        if (params.has('gross')) document.getElementById('grossReturn').value = params.get('gross');
+        if (params.has('er')) document.getElementById('expenseRatio').value = params.get('er');
+        if (params.has('years')) document.getElementById('years').value = params.get('years');
+        if (params.has('step')) document.getElementById('stepup').value = params.get('step');
+        if (params.has('lumpsum')) document.getElementById('lumpsum').value = params.get('lumpsum');
+        if (params.has('adj_inf') && params.has('inf')) {
+            document.getElementById('enableInflation').checked = true;
+            document.getElementById('inflationInputDiv').style.display = 'block';
+            document.getElementById('inflationRate').value = params.get('inf');
+        }
+        if (params.has('sip') || params.has('gross')) {
+            runCalculationAndShare();
+        }
+    }
+    
+    // Generate share text message
+    function getShareableText() {
+        const sip = document.getElementById('sipAmount').value;
+        const gross = document.getElementById('grossReturn').value;
+        const er = document.getElementById('expenseRatio').value;
+        const years = document.getElementById('years').value;
+        const finalCorpus = document.getElementById('finalCorpus').innerText;
+        const totalInvest = document.getElementById('totalInvested').innerText;
+        const gains = document.getElementById('totalGains').innerText;
+        const inflationAdj = document.getElementById('inflationAdj').innerText;
+        const inflationEnabled = document.getElementById('enableInflation').checked;
+        return `📊 *Mutual Fund SIP Report* 📊\n💰 SIP: ₹${parseInt(sip).toLocaleString()}/month\n📈 Gross Return: ${gross}% p.a.\n📉 Expense Ratio: ${er}% p.a.\n⏱️ Period: ${years} years\n✅ Total Invested: ${totalInvest}\n📈 Net Gains: ${gains}\n🏆 Final Corpus: ${finalCorpus}\n${inflationEnabled ? `📉 Inflation Adjusted Value: ${inflationAdj}` : ''}\n\n*Expense Ratio matters! Lower fees = higher long-term wealth.*\n`;
+    }
+    
+    // Event Listeners & UI toggles
+    document.getElementById('calculateBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        runCalculationAndShare();
+    });
+    
+    document.getElementById('enableInflation').addEventListener('change', (e) => {
+        const div = document.getElementById('inflationInputDiv');
+        div.style.display = e.target.checked ? 'block' : 'none';
+        if (document.getElementById('resultsPanel').style.display === 'block') {
+            runCalculationAndShare();
+        }
+    });
+    
+    document.getElementById('inflationRate')?.addEventListener('change', () => {
+        if (document.getElementById('resultsPanel').style.display === 'block') runCalculationAndShare();
+    });
+    
+    document.getElementById('shareWhatsApp').addEventListener('click', () => {
+        const msg = getShareableText();
+        const url = window.location.href;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg + '\n🔗 ' + url)}`, '_blank');
+    });
+    
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('✅ Shareable link copied!');
+    });
+    
+    // Also trigger recalculation when any major input changes (for live feel)
+    const inputs = ['sipAmount', 'grossReturn', 'expenseRatio', 'years', 'stepup', 'lumpsum'];
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            if (document.getElementById('resultsPanel').style.display === 'block') runCalculationAndShare();
+        });
+    });
+    
+    // Initial load
+    loadFromURL();
+    
+    // Show default tip and hide results initially if no URL data
+    if (!window.location.search.includes('sip')) {
+        document.getElementById('resultsPanel').style.display = 'none';
+    } else {
+        document.getElementById('resultsPanel').style.display = 'block';
+    }
+    
+    // Tooltip style: show the impact of expense ratio realtime hint
+    const expenseInput = document.getElementById('expenseRatio');
+    expenseInput.addEventListener('input', (e) => {
+        let val = parseFloat(e.target.value);
+        if (val > 2.5) {
+            showToast('⚠️ High expense ratio! Over 2.5% can drastically reduce long-term returns.');
+        }
+    });
+</script>
+    <div class="iframe-container" style="position: relative; width: 100%; padding-top: 60%; overflow: hidden; border: 1px solid #ddd; border-radius: 8px;">
+    <iframe 
+        src="https://bhuvanesh-m-dev.github.io/projects/banner/index.html" 
+        class="responsive-iframe"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+        allowfullscreen
+        title="My Other Projects">
+    </iframe>
+</div>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
