@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP Calculator - Systematic Investment Plan with Inflation & Charts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SIP Calculator - PDF Report & Wealth Planner</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
             --primary-color: #3b82f6;
@@ -153,6 +156,7 @@
             display: flex;
             gap: 12px;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -161,19 +165,41 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
         }
 
         .btn-primary {
             background: var(--primary-color);
             color: white;
         }
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
             background: var(--border);
             color: var(--text-primary);
+        }
+
+        .btn-download {
+            background: var(--success-color);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+        }
+        .btn-download:hover:not(:disabled) {
+            background: #0b9e6e;
+            transform: translateY(-1px);
         }
 
         .results-grid {
@@ -195,6 +221,7 @@
             font-size: 11px;
             text-transform: uppercase;
             color: var(--text-secondary);
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
@@ -272,6 +299,7 @@
             gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
 
         .share-btn {
@@ -281,6 +309,10 @@
             border: 1px solid var(--border);
             cursor: pointer;
             font-weight: 500;
+            transition: all 0.2s;
+        }
+        .share-btn:hover {
+            background: var(--border);
         }
 
         .footer {
@@ -306,10 +338,75 @@
             opacity: 0;
             transition: 0.2s;
             z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .toast.show {
             opacity: 1;
+        }
+
+        /* Promo Overlay Styling */
+        .promo-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .promo-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .promo-content {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+        }
+        .promo-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+        .promo-content p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .promo-content img {
+            width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* PDF Export specific styling - ensures clean print */
+        @media print {
+            .btn, .share-buttons, .header-actions, .btn-group, .calculator-card form, .iframe-container, .footer .share-buttons, #downloadPdfBtn, .share-btn, .promo-overlay {
+                display: none !important;
+            }
+            .results-area, #resultsArea {
+                display: block !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
         }
 
         @media (max-width: 768px) {
@@ -323,7 +420,7 @@
     <div class="header">
         <div>
             <h1>📈 SIP Calculator</h1>
-            <div class="subtitle">Systematic Investment Plan • Wealth Projection with Inflation Adjustment</div>
+            <div class="subtitle">Systematic Investment Plan • Wealth Projection with Inflation Adjustment • PDF Export</div>
         </div>
         <div class="header-actions">
             <button class="icon-btn home-btn" id="homeBtn">🏠 Home</button>
@@ -366,10 +463,12 @@
             <div class="btn-group">
                 <button type="submit" class="btn btn-primary">🚀 Calculate SIP</button>
                 <button type="reset" class="btn btn-secondary">Reset</button>
+                <button type="button" id="downloadPdfBtn" class="btn btn-download">📄 Download as PDF</button>
             </div>
         </form>
     </div>
 
+    <!-- Results Area (will be exported to PDF) -->
     <div id="resultsArea" class="hidden">
         <div class="results-grid">
             <div class="stat-card"><div class="stat-label">💰 Total Invested</div><div class="stat-value" id="totalInvested">₹0</div></div>
@@ -388,29 +487,59 @@
         </div>
 
         <div class="table-wrapper">
-            <table>
+            <table id="yearlyTableWrapper">
                 <thead>
                     <tr><th>Year</th><th>Yearly SIP</th><th>Total Invested</th><th>Interest Earned (Year)</th><th>Year End Balance</th></tr>
                 </thead>
                 <tbody id="yearlyTable"></tbody>
             </table>
         </div>
+    </div>
 
-        <div class="share-buttons">
-            <button class="share-btn" id="shareWA">📱 WhatsApp</button>
-            <button class="share-btn" id="shareTG">✈️ Telegram</button>
-            <button class="share-btn" id="copyLinkBtn">🔗 Copy Link</button>
-        </div>
+    <div class="share-buttons" id="shareButtons">
+        <button class="share-btn" id="shareWA">📱 WhatsApp</button>
+        <button class="share-btn" id="shareTG">✈️ Telegram</button>
+        <button class="share-btn" id="copyLinkBtn">🔗 Copy Link</button>
     </div>
 
     <footer class="footer">
-        <p>Made with 💙 by Bhuvanesh | SIP Calculator - Build Wealth Consistently</p>
+        <p>Made with 💙 by Bhuvanesh | SIP Calculator - Build Wealth Consistently | 📄 Save as PDF with one click</p>
     </footer>
+
+    <!-- Promo Overlay during PDF Countdown -->
+    <div id="promoOverlay" class="promo-overlay hidden">
+        <div class="promo-content">
+            <h3>✨ While you wait...</h3>
+            <p>Check out my other projects and tools!</p>
+            <img src="https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png" alt="My Projects Banner">
+            <p style="font-weight: 600; color: var(--text-primary); margin-top: 10px;">
+                PDF download starting in <span id="promoCountdown">8</span>s...
+            </p>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 </div>
 
+<!-- Extra iframe banner (outside PDF export area but visible on web) -->
+<div class="iframe-container" style="position: relative; width: 100%; padding-top: 60%; overflow: hidden; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px;">
+    <iframe 
+        src="https://bhuvanesh-m-dev.github.io/projects/banner/index.html" 
+        class="responsive-iframe"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+        allowfullscreen
+        title="My Other Projects">
+    </iframe>
+</div>
+<img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+
 <script>
     let lineChartObj = null, pieChartObj = null;
+    let currentYearlyData = null;
+    let currentResultData = null;
+    let currentInflationAdjValue = 0;
+    let currentInflationRateUsed = 0;
+    let currentYearsNum = 0;
 
     function formatCurrency(amt) {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
@@ -433,13 +562,11 @@
         for (let y = 1; y <= years; y++) {
             let yearlyInvestment = 0;
             let yearlyInterest = 0;
-            let startBalance = balance;
             
             for (let m = 1; m <= 12; m++) {
                 let interest = balance * monthlyRate;
                 balance += interest;
                 yearlyInterest += interest;
-                // Add SIP at month end
                 balance += currentMonthlySIP;
                 yearlyInvestment += currentMonthlySIP;
                 totalInvested += currentMonthlySIP;
@@ -482,12 +609,16 @@
                 labels: labels,
                 datasets: [
                     { label: 'Corpus Value', data: yearlyData.map(d => d.endBalance), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 },
-                    { label: 'Total Invested', data: yearlyData.map(d => d.totalInvestedSoFar), borderColor: '#f59e0b', borderDash: [5, 5], fill: false }
+                    { label: 'Total Invested', data: yearlyData.map(d => d.totalInvestedSoFar), borderColor: '#f59e0b', borderDash: [5, 5], fill: false, borderWidth: 2 }
                 ]
             },
             options: { 
                 responsive: true, 
-                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } } },
+                maintainAspectRatio: true,
+                plugins: { 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } },
+                    legend: { position: 'bottom' }
+                },
                 scales: { y: { ticks: { callback: (val) => formatCurrency(val) } } }
             }
         });
@@ -500,8 +631,11 @@
                 datasets: [{ data: [totalInvested, totalGains], backgroundColor: ['#3b82f6', '#10b981'] }] 
             },
             options: { 
+                responsive: true,
+                maintainAspectRatio: true,
                 plugins: { 
-                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatCurrency(ctx.raw)} (${((ctx.raw/(totalInvested+totalGains))*100).toFixed(1)}%)` } } 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatCurrency(ctx.raw)} (${((ctx.raw/(totalInvested+totalGains))*100).toFixed(1)}%)` } },
+                    legend: { position: 'bottom' }
                 } 
             }
         });
@@ -515,9 +649,9 @@
         
         const infoDiv = document.getElementById('infoMsg');
         if (inflationRate > 0) {
-            infoDiv.innerHTML = `📉 Inflation Adjusted (${inflationRate}% p.a.): Your ₹${formatCurrency(result.balance)} in ${years} years is worth ₹${formatCurrency(inflationAdjValue)} in today's purchasing power. Keep investing! 💙`;
+            infoDiv.innerHTML = `📉 Inflation Adjusted (${inflationRate}% p.a.): Your ${formatCurrency(result.balance)} in ${years} years is worth ${formatCurrency(inflationAdjValue)} in today's purchasing power. Keep investing! 💙`;
         } else {
-            infoDiv.innerHTML = `💙 Total Wealth: ${formatCurrency(result.balance)} | You invested ₹${formatCurrency(result.totalInvested)} and gained ₹${formatCurrency(result.totalGains)}!`;
+            infoDiv.innerHTML = `💙 Total Wealth: ${formatCurrency(result.balance)} | You invested ${formatCurrency(result.totalInvested)} and gained ${formatCurrency(result.totalGains)}!`;
         }
         
         const tbody = document.getElementById('yearlyTable');
@@ -529,6 +663,163 @@
         destroyCharts();
         renderCharts(yearlyData, result.totalInvested, result.totalGains);
         document.getElementById('resultsArea').classList.remove('hidden');
+        
+        // Store data for PDF
+        currentYearlyData = yearlyData;
+        currentResultData = result;
+        currentInflationAdjValue = inflationAdjValue;
+        currentInflationRateUsed = inflationRate;
+        currentYearsNum = years;
+    }
+
+    // Function to handle the countdown before generating the PDF
+    function startPdfCountdown() {
+        const resultsElement = document.getElementById('resultsArea');
+        if (!resultsElement || resultsElement.classList.contains('hidden')) {
+            showToast('⚠️ Please calculate SIP first to generate PDF report.');
+            return;
+        }
+
+        const downloadBtn = document.getElementById('downloadPdfBtn');
+        if (downloadBtn.disabled) return; // Prevent multiple clicks
+
+        let timeLeft = 8;
+        const originalText = downloadBtn.innerHTML;
+        
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+        
+        // Show promo overlay
+        const promoOverlay = document.getElementById('promoOverlay');
+        const promoCountdown = document.getElementById('promoCountdown');
+        promoOverlay.classList.remove('hidden');
+        
+        // Small delay to allow display property to apply before opacity transition starts
+        setTimeout(() => promoOverlay.classList.add('show'), 10);
+        if (promoCountdown) promoCountdown.innerText = timeLeft;
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+                if (promoCountdown) promoCountdown.innerText = timeLeft;
+                
+                // Hide the promo overlay exactly after 5 seconds (when 3 seconds are left)
+                if (timeLeft === 3) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300); // wait for fade transition
+                }
+            } else {
+                clearInterval(timerInterval);
+                downloadBtn.innerHTML = `📄 Generating...`;
+                
+                // Safety catch to ensure it's hidden
+                if (promoOverlay.classList.contains('show')) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300);
+                }
+                
+                // Call the actual PDF generation function
+                executePDFGeneration().then(() => {
+                    // Reset button after successful download
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }).catch(() => {
+                    // Reset button if there was an error
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                });
+            }
+        }, 1000);
+    }
+
+    // Core PDF Generation logic using html2pdf
+    async function executePDFGeneration() {
+        showToast('📄 Generating PDF report, please wait...');
+        
+        // Ensure charts are fully rendered (give a tiny delay)
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Clone the results area to avoid modifying original page for PDF
+        const elementToPrint = document.getElementById('resultsArea').cloneNode(true);
+        
+        // Add a header/title for PDF context
+        const headerDiv = document.createElement('div');
+        headerDiv.style.textAlign = 'center';
+        headerDiv.style.marginBottom = '20px';
+        headerDiv.style.padding = '10px';
+        headerDiv.style.borderBottom = '1px solid #ccc';
+        headerDiv.innerHTML = `<h2 style="color: #3b82f6;">📈 SIP Investment Report</h2>
+                               <p style="color: #64748b;">Generated on ${new Date().toLocaleString()} | Systematic Investment Plan Calculator</p>`;
+        elementToPrint.insertBefore(headerDiv, elementToPrint.firstChild);
+        
+        // Convert canvas to images so html2pdf renders them successfully
+        const originalCanvases = document.getElementById('resultsArea').querySelectorAll('canvas');
+        const clonedCanvases = elementToPrint.querySelectorAll('canvas');
+        
+        originalCanvases.forEach((canvas, index) => {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.width = '100%';
+            img.style.maxWidth = '400px'; 
+            img.style.height = 'auto';
+            img.style.margin = '0 auto';
+            img.style.display = 'block';
+            clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
+        });
+
+        // Add requested Banner Image and Credit at the bottom
+        const footerDiv = document.createElement('div');
+        footerDiv.style.textAlign = 'center';
+        footerDiv.style.marginTop = '40px';
+        footerDiv.style.paddingTop = '20px';
+        footerDiv.style.borderTop = '1px solid #e2e8f0';
+        footerDiv.style.pageBreakInside = 'avoid';
+
+        const promoImg = document.createElement('img');
+        promoImg.crossOrigin = 'anonymous'; // Ensure html2canvas doesn't taint
+        promoImg.style.maxWidth = '100%';
+        promoImg.style.borderRadius = '12px';
+        promoImg.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        promoImg.style.marginBottom = '15px';
+
+        // Fix: Explicitly wait for the banner image to load before generating the PDF
+        await new Promise((resolve) => {
+            promoImg.onload = resolve;
+            promoImg.onerror = resolve; // Continue even if image fails so it doesn't freeze
+            promoImg.src = 'https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png';
+        });
+
+        const creditText = document.createElement('p');
+        creditText.style.color = '#64748b';
+        creditText.style.fontSize = '14px';
+        creditText.style.fontWeight = '500';
+        creditText.innerHTML = 'Created by <a href="https://bhuvanesh-m-dev.github.io/calculator/" style="color: #3b82f6; text-decoration: none;">https://bhuvanesh-m-dev.github.io/calculator/</a>';
+
+        footerDiv.appendChild(promoImg);
+        footerDiv.appendChild(creditText);
+        elementToPrint.appendChild(footerDiv);
+        
+        // Define safe filename avoiding characters like '/' and ':' which cause errors in file explorers
+        const dateStr = new Date().toISOString().slice(0,10);
+        const safeFilename = `SIP_Report_${dateStr}_by_bhuvanesh-m-dev.github.io_calculator.pdf`;
+        
+        const opt = {
+            margin:        [0.5, 0.5, 0.5, 0.5], // top, right, bottom, left in inches
+            filename:      safeFilename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, letterRendering: true, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        try {
+            await html2pdf().set(opt).from(elementToPrint).save();
+            showToast('✅ PDF downloaded successfully!');
+        } catch (err) {
+            console.error('PDF Error:', err);
+            showToast('❌ PDF generation failed. Please try again.');
+            throw err;
+        }
     }
 
     function updateURLAndCalculate() {
@@ -540,9 +831,9 @@
         let enableInflation = document.getElementById('enableInflationCheckbox').checked;
         let inflation = enableInflation ? parseFloat(document.getElementById('inflationRate').value) || 0 : 0;
         
-        if (sip < 100) { showToast('⚠️ Minimum SIP ₹100'); return; }
+        if (isNaN(sip) || sip < 100) { showToast('⚠️ Minimum SIP ₹100'); return; }
         if (annualRet < 0 || annualRet > 30) { showToast('Return between 0-30%'); return; }
-        if (years < 1) { showToast('Years must be at least 1'); return; }
+        if (years < 1 || years > 60) { showToast('Years between 1-60'); return; }
         if (inflation < 0) inflation = 0;
         
         const result = calculateSIPDetails(sip, annualRet, years, stepup, lumpsum);
@@ -552,6 +843,7 @@
         }
         updateUI(result, result.yearlyData, inflationAdj, enableInflation ? inflation : 0, years);
         
+        // Update URL state (stateless)
         const params = new URLSearchParams();
         params.set('sip', sip);
         params.set('return', annualRet);
@@ -562,7 +854,8 @@
             params.set('inflation', inflation);
             params.set('adj_inflation', '1');
         }
-        window.history.replaceState({}, '', `?${params.toString()}`);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
     }
 
     function loadFromURL() {
@@ -577,32 +870,71 @@
                 document.getElementById('enableInflationCheckbox').checked = true;
                 document.getElementById('inflationDiv').style.display = 'inline-block';
                 document.getElementById('inflationRate').value = params.get('inflation');
+            } else {
+                document.getElementById('enableInflationCheckbox').checked = false;
+                document.getElementById('inflationDiv').style.display = 'none';
             }
             updateURLAndCalculate();
+
+            if (params.get('autoDownload') === 'true') {
+                setTimeout(() => {
+                    executePDFGeneration().then(() => {
+                        setTimeout(() => window.close(), 1000);
+                    }).catch(console.error);
+                }, 1500); // Wait for chart animations to finish
+            }
         }
     }
 
     function getShareMessage() {
-        const future = document.getElementById('futureValue').innerText;
-        const invested = document.getElementById('totalInvested').innerText;
-        const gains = document.getElementById('totalGains').innerText;
+        if (!currentResultData) return "SIP Calculator: Use the link to view your financial plan!";
+        const future = formatCurrency(currentResultData.balance);
+        const invested = formatCurrency(currentResultData.totalInvested);
+        const gains = formatCurrency(currentResultData.totalGains);
         const sip = document.getElementById('sipAmount').value;
         const ret = document.getElementById('annualReturn').value;
         const yrs = document.getElementById('yearsVal').value;
-        return `📈 *SIP Results* 📈\n💰 Monthly SIP: ₹${parseInt(sip).toLocaleString()}\n📈 Return: ${ret}% p.a.\n⏱️ ${yrs} years\n✅ Total Invested: ${invested}\n📊 Total Gains: ${gains}\n🏆 Final Corpus: ${future}\n\n`;
+        return `📈 *SIP Results* 📈
+💰 Monthly SIP: ₹${parseInt(sip).toLocaleString()}
+📈 Return: ${ret}% p.a.
+⏱️ ${yrs} years
+✅ Total Invested: ${invested}
+📊 Total Gains: ${gains}
+🏆 Final Corpus: ${future}
+
+🔗 Full Report: ${window.location.href}`;
     }
 
-    // Event listeners
+    // Event Listeners
     document.getElementById('sipForm').addEventListener('submit', (e) => { e.preventDefault(); updateURLAndCalculate(); });
-    document.getElementById('sipForm').addEventListener('reset', () => { window.location.href = window.location.pathname; location.reload(); });
+    document.getElementById('sipForm').addEventListener('reset', () => { 
+        window.location.href = window.location.pathname; 
+        location.reload(); 
+    });
     document.getElementById('themeToggle').addEventListener('click', () => {
         document.documentElement.classList.toggle('dark-mode');
         localStorage.setItem('sip-theme', document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light');
+        if (currentYearlyData && currentResultData) {
+            destroyCharts();
+            renderCharts(currentYearlyData, currentResultData.totalInvested, currentResultData.totalGains);
+        }
     });
     document.getElementById('homeBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
-    document.getElementById('shareWA').addEventListener('click', () => { window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage() + window.location.href)}`, '_blank'); });
-    document.getElementById('shareTG').addEventListener('click', () => { window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(getShareMessage())}`, '_blank'); });
-    document.getElementById('copyLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(window.location.href); showToast('✅ Link copied!'); });
+    document.getElementById('shareWA').addEventListener('click', () => { 
+        if (!currentResultData) { showToast("Calculate SIP first"); return; }
+        window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank'); 
+    });
+    document.getElementById('shareTG').addEventListener('click', () => { 
+        if (!currentResultData) { showToast("Calculate SIP first"); return; }
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(getShareMessage())}`, '_blank'); 
+    });
+    document.getElementById('copyLinkBtn').addEventListener('click', () => { 
+        navigator.clipboard.writeText(window.location.href); 
+        showToast('✅ Link copied! Share your calculations.'); 
+    });
+    
+    // PDF download button handler linked to the new countdown function
+    document.getElementById('downloadPdfBtn').addEventListener('click', startPdfCountdown);
     
     document.getElementById('enableInflationCheckbox').addEventListener('change', (e) => {
         document.getElementById('inflationDiv').style.display = e.target.checked ? 'inline-block' : 'none';
@@ -614,18 +946,10 @@
         if (document.getElementById('resultsArea') && !document.getElementById('resultsArea').classList.contains('hidden')) updateURLAndCalculate();
     });
     
+    // Theme init
     if (localStorage.getItem('sip-theme') === 'dark') document.documentElement.classList.add('dark-mode');
     loadFromURL();
 </script>
-    <div class="iframe-container" style="position: relative; width: 100%; padding-top: 60%; overflow: hidden; border: 1px solid #ddd; border-radius: 8px;">
-    <iframe 
-        src="https://bhuvanesh-m-dev.github.io/projects/banner/index.html" 
-        class="responsive-iframe"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-        allowfullscreen
-        title="My Other Projects">
-    </iframe>
-</div>
-<img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
 </body>
 </html>
