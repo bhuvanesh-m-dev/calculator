@@ -243,6 +243,7 @@
             </div>
 
             <button class="generate-btn" id="generateBtn">✨ Calculate & Create My SIP Link ✨</button>
+            <button class="generate-btn" id="downloadPdfIndexBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 12px;">📄 Download as PDF</button>
 
             <div class="funny-msg" id="funnyMsg">
                 💙 "Start early, stay consistent — SIP is your wealth engine!"
@@ -256,6 +257,7 @@
 
     <script>
         const generateBtn = document.getElementById('generateBtn');
+        const downloadPdfIndexBtn = document.getElementById('downloadPdfIndexBtn');
         const sipInput = document.getElementById('sipAmount');
         const returnInput = document.getElementById('annualReturn');
         const yearsInput = document.getElementById('periodYears');
@@ -395,6 +397,38 @@
         });
 
         generateBtn.addEventListener('click', generateShareableLink);
+        
+        downloadPdfIndexBtn.addEventListener('click', () => {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            let { sip, ret, years, stepup, lumpsum } = validated;
+            const enableInflation = enableInflationCheck.checked;
+            let inflation = 0;
+            if (enableInflation) {
+                inflation = parseFloat(inflationRateInput.value);
+                if (isNaN(inflation) || inflation < 0) inflation = 0;
+                if (inflation > 20) inflation = 20;
+            }
+            
+            const params = new URLSearchParams();
+            params.set('sip', sip);
+            params.set('return', ret);
+            params.set('years', years);
+            if (stepup > 0) params.set('stepup', stepup);
+            if (lumpsum > 0) params.set('lumpsum', lumpsum);
+            if (enableInflation && inflation > 0) {
+                params.set('inflation', inflation);
+                params.set('adj_inflation', '1');
+            }
+            params.set('autoDownload', 'true');
+            
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            funnyMsgDiv.innerHTML = `📄 Opening PDF generator and downloading...`;
+            window.open(fullUrl, '_blank');
+        });
         
         // Initial random funny message
         funnyMsgDiv.innerHTML = `💙 ${getRandomFunnyMessage()}`;
