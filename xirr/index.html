@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>XIRR Calculator | Extended Internal Rate of Return Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ec489a;
+            --primary-dark: #db2777;
+            --primary-light: #fbcfe8;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --bg-gradient: linear-gradient(135deg, #ec489a 0%, #be185d 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .entry-container {
+            max-width: 700px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fun-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .fun-header {
+            margin-bottom: 32px;
+        }
+
+        .fun-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #ec489a 0%, #be185d 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .fun-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .emoji-big {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+            background: white;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+
+        .cashflow-section {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .cashflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .cashflow-header h3 {
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .add-cashflow-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .cashflow-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cashflow-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .cashflow-date {
+            width: 130px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+            background: var(--background);
+        }
+
+        .cashflow-amount {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .remove-cashflow {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ec489a 0%, #be185d 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4);
+        }
+
+        .funny-msg {
+            background: #fce7f3;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #9d174d;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 16px;
+        }
+
+        @media (max-width: 550px) {
+            .fun-card {
+                padding: 28px 20px;
+            }
+            .cashflow-item {
+                flex-wrap: wrap;
+            }
+            .cashflow-date {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="entry-container">
+        <div class="fun-card">
+            <div class="fun-header">
+                <div class="emoji-big">📅💰</div>
+                <h1>XIRR Calculator</h1>
+                <p>Calculate returns for irregular investments & withdrawals</p>
+            </div>
+
+            <div class="cashflow-section">
+                <div class="cashflow-header">
+                    <h3>💰 Cash Flow Transactions</h3>
+                    <button type="button" class="add-cashflow-btn" id="addCashflowBtn">+ Add Transaction</button>
+                </div>
+                
+                <div class="cashflow-list" id="cashflowList">
+                    <!-- Dynamic cash flows will appear here -->
+                </div>
+                <div class="demo-hint" style="margin-top: 10px;">
+                    💡 Tip: First transaction is usually negative (investment). Add positive transactions for returns/redemptions.
+                </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ Calculate & Create My XIRR Link ✨</button>
+            <button class="generate-btn" id="downloadPdfIndexBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 12px;">📄 Download as PDF</button>
+
+            <div class="funny-msg" id="funnyMsg">
+                💗 "XIRR gives you the true annual return for any investment timing!"
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadPdfIndexBtn = document.getElementById('downloadPdfIndexBtn');
+        const cashflowListDiv = document.getElementById('cashflowList');
+        const addCashflowBtn = document.getElementById('addCashflowBtn');
+        const funnyMsgDiv = document.getElementById('funnyMsg');
+
+        let cashflows = [];
+
+        const funnyMessages = [
+            "💗 XIRR: The Swiss Army knife of return calculations!",
+            "📅 Irregular investments? XIRR handles them like a pro!",
+            "🚀 SIP, lumpsum, or random — XIRR understands it all!",
+            "💰 Your MF returns? XIRR tells the real story!",
+            "🏆 XIRR > CAGR for real-world investments!",
+            "🎯 Even with multiple transactions, XIRR stays accurate!",
+            "💎 Time-weighted vs Money-weighted — XIRR is your friend!",
+            "🌟 Perfect for tracking mutual fund SIP returns!"
+        ];
+
+        function getRandomFunnyMessage() {
+            return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        }
+
+        function formatDate(date) {
+            let d = new Date(date);
+            return d.toISOString().split('T')[0];
+        }
+
+        function renderCashflows() {
+            cashflowListDiv.innerHTML = '';
+            cashflows.forEach((cf, index) => {
+                const div = document.createElement('div');
+                div.className = 'cashflow-item';
+                div.innerHTML = `
+                    <input type="date" class="cashflow-date" value="${cf.date}" style="width:140px">
+                    <input type="number" class="cashflow-amount" placeholder="Amount (₹)" value="${cf.amount}" step="10000">
+                    <button class="remove-cashflow" data-index="${index}">✕</button>
+                `;
+                cashflowListDiv.appendChild(div);
+            });
+
+            document.querySelectorAll('.cashflow-date').forEach((input, idx) => {
+                input.addEventListener('change', (e) => {
+                    cashflows[idx].date = e.target.value;
+                });
+            });
+            document.querySelectorAll('.cashflow-amount').forEach((input, idx) => {
+                input.addEventListener('change', (e) => {
+                    cashflows[idx].amount = parseFloat(e.target.value) || 0;
+                });
+            });
+            document.querySelectorAll('.remove-cashflow').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(btn.dataset.index);
+                    cashflows.splice(idx, 1);
+                    renderCashflows();
+                });
+            });
+        }
+
+        function addCashflow() {
+            let lastDate = cashflows.length > 0 ? cashflows[cashflows.length - 1].date : new Date().toISOString().split('T')[0];
+            let newDate = new Date(lastDate);
+            newDate.setMonth(newDate.getMonth() + 1);
+            let newDateStr = newDate.toISOString().split('T')[0];
+            cashflows.push({ date: newDateStr, amount: 50000 });
+            renderCashflows();
+        }
+
+        function initCashflows() {
+            let today = new Date();
+            let oneYearAgo = new Date(today);
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            
+            cashflows = [
+                { date: formatDate(oneYearAgo), amount: -500000 },
+                { date: formatDate(new Date(today.getFullYear(), today.getMonth() - 11, 1)), amount: 50000 },
+                { date: formatDate(new Date(today.getFullYear(), today.getMonth() - 9, 1)), amount: 55000 },
+                { date: formatDate(new Date(today.getFullYear(), today.getMonth() - 6, 1)), amount: 60000 },
+                { date: formatDate(new Date(today.getFullYear(), today.getMonth() - 3, 1)), amount: 65000 },
+                { date: formatDate(today), amount: 70000 }
+            ];
+            renderCashflows();
+        }
+
+        function validateInputs() {
+            let validCashflows = cashflows.filter(cf => cf.date && !isNaN(cf.amount) && cf.amount !== 0);
+            return { cashflows: validCashflows };
+        }
+
+        function calculateXIRRPreview(cashflows) {
+            if (cashflows.length < 2) return 0;
+            let totalPositive = cashflows.filter(c => c.amount > 0).reduce((s, c) => s + c.amount, 0);
+            let totalNegative = Math.abs(cashflows.filter(c => c.amount < 0).reduce((s, c) => s + c.amount, 0));
+            if (totalNegative === 0) return 0;
+            let firstDate = new Date(cashflows[0].date);
+            let lastDate = new Date(cashflows[cashflows.length - 1].date);
+            let years = (lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365.25);
+            let approxReturn = (totalPositive / totalNegative) - 1;
+            let approxXIRR = (Math.pow(1 + approxReturn, 1 / years) - 1) * 100;
+            return Math.max(-50, Math.min(100, approxXIRR));
+        }
+
+        function generateShareableLink() {
+            const validated = validateInputs();
+            if (!validated || validated.cashflows.length < 2) {
+                funnyMsgDiv.innerHTML = `⚠️ Please add at least 2 transactions (one negative, one positive)!`;
+                return;
+            }
+            
+            let { cashflows } = validated;
+            
+            const params = new URLSearchParams();
+            params.set('cf_count', cashflows.length);
+            cashflows.forEach((cf, idx) => {
+                params.set(`cf_${idx}_date`, cf.date);
+                params.set(`cf_${idx}_amount`, cf.amount);
+            });
+            
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            let approxXIRR = calculateXIRRPreview(cashflows);
+            
+            funnyMsgDiv.innerHTML = `🎉 ${getRandomFunnyMessage()}<br>🔗 Estimated XIRR: ${approxXIRR.toFixed(2)}% ✨<br>Opening calculator in new tab...`;
+            
+            window.open(fullUrl, '_blank');
+        }
+
+        addCashflowBtn.addEventListener('click', addCashflow);
+        generateBtn.addEventListener('click', generateShareableLink);
+        
+        downloadPdfIndexBtn.addEventListener('click', () => {
+            const validated = validateInputs();
+            if (!validated || validated.cashflows.length < 2) {
+                funnyMsgDiv.innerHTML = `⚠️ Please add at least 2 transactions!`;
+                return;
+            }
+            
+            let { cashflows } = validated;
+            
+            const params = new URLSearchParams();
+            params.set('cf_count', cashflows.length);
+            cashflows.forEach((cf, idx) => {
+                params.set(`cf_${idx}_date`, cf.date);
+                params.set(`cf_${idx}_amount`, cf.amount);
+            });
+            params.set('autoDownload', 'true');
+            
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            funnyMsgDiv.innerHTML = `📄 Opening PDF generator and downloading...`;
+            window.open(fullUrl, '_blank');
+        });
+        
+        initCashflows();
+        funnyMsgDiv.innerHTML = `💗 ${getRandomFunnyMessage()}`;
+    </script>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
