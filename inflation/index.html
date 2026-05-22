@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Inflation Calculator | Future Value & Purchasing Power Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ef4444;
+            --primary-dark: #dc2626;
+            --primary-light: #fecaca;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .entry-container {
+            max-width: 580px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fun-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .fun-header {
+            margin-bottom: 32px;
+        }
+
+        .fun-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .fun-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .emoji-big {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+            background: white;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 40px;
+        }
+
+        .radio-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+        }
+
+        .funny-msg {
+            background: #fee2e2;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #991b1b;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 16px;
+        }
+
+        @media (max-width: 550px) {
+            .fun-card {
+                padding: 28px 20px;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="entry-container">
+        <div class="fun-card">
+            <div class="fun-header">
+                <div class="emoji-big">📉💸</div>
+                <h1>Inflation Calculator</h1>
+                <p>See how inflation eats your money • Plan your future purchases</p>
+            </div>
+
+            <div class="input-group">
+                <label>💰 Current Amount / Value (₹)</label>
+                <input type="number" id="presentValue" placeholder="e.g., 100000" value="100000" step="10000">
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>📈 Inflation Rate (% p.a.)</label>
+                    <input type="number" id="inflationRate" placeholder="e.g., 6" value="6" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label>⏰ Time Period (Years)</label>
+                    <input type="number" id="periodYears" placeholder="e.g., 10" value="10" step="1">
+                </div>
+            </div>
+
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="calcType" value="future" checked> 📈 Future Value
+                </label>
+                <label>
+                    <input type="radio" name="calcType" value="present"> 📉 Present Value
+                </label>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ Calculate & Create My Inflation Link ✨</button>
+            <button class="generate-btn" id="downloadPdfIndexBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 12px;">📄 Download as PDF</button>
+
+            <div class="funny-msg" id="funnyMsg">
+                🔥 "Inflation is the silent wealth killer — stay ahead of it!"
+            </div>
+
+            <div class="demo-hint">
+                💡 Tip: Future Value shows what your money will be worth. Present Value shows what future money is worth today. Generate a shareable link to share your calculation!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadPdfIndexBtn = document.getElementById('downloadPdfIndexBtn');
+        const presentValueInput = document.getElementById('presentValue');
+        const inflationRateInput = document.getElementById('inflationRate');
+        const yearsInput = document.getElementById('periodYears');
+        const futureRadio = document.querySelector('input[value="future"]');
+        const presentRadio = document.querySelector('input[value="present"]');
+        const funnyMsgDiv = document.getElementById('funnyMsg');
+
+        const funnyMessages = [
+            "🔥 Inflation: The only thing rising faster than your blood pressure!",
+            "📉 Your money today ≠ your money tomorrow — thanks to inflation!",
+            "💸 A rupee today is worth more than a rupee tomorrow!",
+            "🏦 Beat inflation or retire poor — the choice is yours!",
+            "📈 6% inflation means prices double every 12 years!",
+            "💰 Invest, don't just save — inflation hates investors!",
+            "🎯 Your grandparents bought a house for ₹1L. Now? ₹1Cr. That's inflation!",
+            "⚡ Inflation is like a tax without legislation!"
+        ];
+
+        function validateInputs() {
+            let presentValue = parseFloat(presentValueInput.value);
+            let inflation = parseFloat(inflationRateInput.value);
+            let years = parseInt(yearsInput.value);
+            let calcType = futureRadio.checked ? 'future' : 'present';
+
+            if (isNaN(presentValue) || presentValue < 100) {
+                presentValueInput.value = 10000;
+                presentValue = 10000;
+                funnyMsgDiv.innerHTML = "🐣 Starting with ₹10,000? Let's see its future value!";
+            }
+            if (isNaN(inflation) || inflation < 0) {
+                inflationRateInput.value = 6;
+                inflation = 6;
+            }
+            if (inflation > 50) {
+                inflationRateInput.value = 50;
+                inflation = 50;
+            }
+            if (isNaN(years) || years < 1) {
+                yearsInput.value = 1;
+                years = 1;
+            }
+            if (years > 50) yearsInput.value = 50;
+            
+            return { presentValue, inflation, years, calcType };
+        }
+
+        function getRandomFunnyMessage() {
+            return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        }
+
+        function calculatePreview(presentValue, inflation, years, calcType) {
+            if (calcType === 'future') {
+                return presentValue * Math.pow(1 + inflation / 100, years);
+            } else {
+                return presentValue / Math.pow(1 + inflation / 100, years);
+            }
+        }
+
+        function generateShareableLink() {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            let { presentValue, inflation, years, calcType } = validated;
+            
+            // Build URL parameters for calculator page
+            const params = new URLSearchParams();
+            params.set('amount', presentValue);
+            params.set('inflation', inflation);
+            params.set('years', years);
+            params.set('type', calcType);
+            
+            // Link to calculator.html (same folder)
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            // Calculate preview value
+            let result = calculatePreview(presentValue, inflation, years, calcType);
+            let resultText = calcType === 'future' ? 'Future Value' : 'Present Value (Today\'s Money)';
+            
+            funnyMsgDiv.innerHTML = `🎉 ${getRandomFunnyMessage()}<br>🔗 ${resultText}: ₹${Math.round(result).toLocaleString()} ✨<br>Opening calculator in new tab...`;
+            
+            // Open calculator in new tab
+            window.open(fullUrl, '_blank');
+        }
+
+        generateBtn.addEventListener('click', generateShareableLink);
+        
+        downloadPdfIndexBtn.addEventListener('click', () => {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            let { presentValue, inflation, years, calcType } = validated;
+            
+            const params = new URLSearchParams();
+            params.set('amount', presentValue);
+            params.set('inflation', inflation);
+            params.set('years', years);
+            params.set('type', calcType);
+            params.set('autoDownload', 'true');
+            
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            funnyMsgDiv.innerHTML = `📄 Opening PDF generator and downloading...`;
+            window.open(fullUrl, '_blank');
+        });
+        
+        // Initial random funny message
+        funnyMsgDiv.innerHTML = `🔥 ${getRandomFunnyMessage()}`;
+    </script>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
