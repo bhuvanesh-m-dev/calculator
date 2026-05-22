@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>IRR Calculator - Internal Rate of Return | PDF Report</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        :root {
+            --primary-color: #06b6d4;
+            --primary-dark: #0891b2;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        html.dark-mode {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            transition: var(--transition);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            padding: 24px 0 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #0e7490);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .home-btn {
+            width: auto;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .calculator-card, .results-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .input-group input {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .cashflow-section {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid var(--border);
+        }
+
+        .cashflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .add-cashflow-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .cashflow-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cashflow-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .cashflow-item input {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .cashflow-year {
+            width: 80px;
+        }
+
+        .cashflow-amount {
+            flex: 1;
+        }
+
+        .remove-cashflow {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-download {
+            background: var(--success-color);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+        }
+        .btn-download:hover:not(:disabled) {
+            background: #0b9e6e;
+            transform: translateY(-1px);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-top: 8px;
+        }
+
+        .info-badge {
+            background: var(--background);
+            border-radius: 60px;
+            padding: 12px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .info-badge.excellent {
+            border-left: 4px solid var(--success-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .info-badge.good {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-badge.poor {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .info-badge.bad {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .chart-box {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-box h3 {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        canvas {
+            max-height: 260px;
+            width: 100%;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        th {
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .share-btn {
+            padding: 10px 20px;
+            border-radius: 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .share-btn:hover {
+            background: var(--border);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .promo-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .promo-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .promo-content {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+        }
+        .promo-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+        .promo-content img {
+            width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        @media print {
+            .btn, .share-buttons, .header-actions, .btn-group, .calculator-card form, .iframe-container, .footer .share-buttons, #downloadPdfBtn, .share-btn, .promo-overlay {
+                display: none !important;
+            }
+            .results-area, #resultsArea {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .charts-row { grid-template-columns: 1fr; }
+            .results-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>📊 IRR Calculator</h1>
+            <div class="subtitle">Internal Rate of Return • Investment Performance Analyzer • PDF Export</div>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn home-btn" id="homeBtn">🏠 Home</button>
+            <button class="icon-btn" id="themeToggle">🌙</button>
+        </div>
+    </div>
+
+    <div class="calculator-card">
+        <form id="irrForm">
+            <div class="input-group">
+                <label>💸 Initial Investment (Year 0) - Negative Outflow</label>
+                <input type="number" id="initialInvestment" step="10000" value="-500000">
+            </div>
+
+            <div class="cashflow-section">
+                <div class="cashflow-header">
+                    <strong>💰 Future Cash Flows (Positive Inflows)</strong>
+                    <button type="button" class="add-cashflow-btn" id="addCashflowBtn">+ Add</button>
+                </div>
+                <div id="cashflowList" class="cashflow-list"></div>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">🚀 Calculate IRR</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+                <button type="button" id="downloadPdfBtn" class="btn btn-download">📄 Download as PDF</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="resultsArea" class="hidden">
+        <div class="results-grid">
+            <div class="stat-card"><div class="stat-label">💰 TOTAL INVESTMENT</div><div class="stat-value" id="totalInvestment">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">📈 TOTAL INFLOW</div><div class="stat-value" id="totalInflow">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">💵 NET PROFIT</div><div class="stat-value" id="netProfit">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">⚡ IRR</div><div class="stat-value" id="irrValue">0%</div></div>
+        </div>
+
+        <div class="info-badge" id="infoMsg">
+            💙 Your IRR calculation results will appear here.
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-box"><h3>📊 Cash Flow Over Time</h3><canvas id="barChart"></canvas></div>
+            <div class="chart-box"><h3>🥧 Investment vs Returns</h3><canvas id="pieChart"></canvas></div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Year</th><th>Cash Flow</th><th>Cumulative Cash Flow</th><th>PV of Cash Flow</th><th>NPV Contribution</th></tr>
+                </thead>
+                <tbody id="cashflowTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="share-buttons">
+        <button class="share-btn" id="shareWA">📱 WhatsApp</button>
+        <button class="share-btn" id="shareTG">✈️ Telegram</button>
+        <button class="share-btn" id="copyLinkBtn">🔗 Copy Link</button>
+    </div>
+
+    <footer class="footer">
+        <p>Made with 💙 by Bhuvanesh | IRR Calculator - Evaluate Investment Returns | 📄 Save as PDF with one click</p>
+    </footer>
+
+    <div id="promoOverlay" class="promo-overlay hidden">
+        <div class="promo-content">
+            <h3>✨ While you wait...</h3>
+            <p>Check out my other projects and tools!</p>
+            <img src="https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png" alt="My Projects Banner">
+            <p>PDF download starting in <span id="promoCountdown">8</span>s...</p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+</div>
+
+<div class="iframe-container" style="position: relative; width: 100%; padding-top: 60%; overflow: hidden; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px;">
+    <iframe src="https://bhuvanesh-m-dev.github.io/projects/banner/index.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
+</div>
+
+<script>
+    let barChartObj = null, pieChartObj = null;
+    let currentCashflows = [];
+    let currentIRR = 0;
+
+    function formatCurrency(amt) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Newton-Raphson method for IRR calculation
+    function calculateIRR(cashflows, guess = 0.1) {
+        let maxIterations = 1000;
+        let tolerance = 1e-8;
+        let rate = guess;
+        
+        for (let i = 0; i < maxIterations; i++) {
+            let npv = 0;
+            let derivative = 0;
+            
+            for (let j = 0; j < cashflows.length; j++) {
+                let period = cashflows[j].year;
+                let amount = cashflows[j].amount;
+                let denominator = Math.pow(1 + rate, period);
+                npv += amount / denominator;
+                derivative -= period * amount / Math.pow(1 + rate, period + 1);
+            }
+            
+            let newRate = rate - npv / derivative;
+            
+            if (Math.abs(newRate - rate) < tolerance) {
+                return newRate * 100;
+            }
+            rate = newRate;
+        }
+        return NaN;
+    }
+
+    function calculatePV(amount, rate, years) {
+        return amount / Math.pow(1 + rate, years);
+    }
+
+    function processCashflows(initial, cashflows) {
+        let allCashflows = [{ year: 0, amount: initial }];
+        cashflows.forEach(cf => {
+            allCashflows.push({ year: cf.year, amount: cf.amount });
+        });
+        
+        let totalInvestment = Math.abs(initial);
+        let totalInflow = cashflows.reduce((sum, cf) => sum + cf.amount, 0);
+        let netProfit = totalInflow - totalInvestment;
+        
+        // Calculate IRR
+        let irr = calculateIRR(allCashflows, 0.1);
+        
+        // Calculate PV of each cashflow at IRR
+        let irrRate = irr / 100;
+        let yearlyData = [];
+        let cumulative = initial;
+        
+        for (let i = 0; i < cashflows.length; i++) {
+            let cf = cashflows[i];
+            cumulative += cf.amount;
+            let pv = calculatePV(cf.amount, irrRate, cf.year);
+            let npvContribution = pv;
+            
+            yearlyData.push({
+                year: cf.year,
+                cashflow: cf.amount,
+                cumulative: cumulative,
+                pv: pv,
+                npvContribution: npvContribution
+            });
+        }
+        
+        return { totalInvestment, totalInflow, netProfit, irr, yearlyData };
+    }
+
+    function destroyCharts() {
+        if (barChartObj) { barChartObj.destroy(); barChartObj = null; }
+        if (pieChartObj) { pieChartObj.destroy(); pieChartObj = null; }
+    }
+
+    function renderCharts(yearlyData, totalInvestment, netProfit) {
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const labels = yearlyData.map(d => `Year ${d.year}`);
+        
+        barChartObj = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { 
+                        label: 'Cash Flow (₹)', 
+                        data: yearlyData.map(d => d.cashflow), 
+                        backgroundColor: '#06b6d4',
+                        borderRadius: 8
+                    },
+                    { 
+                        label: 'Cumulative Cash Flow (₹)', 
+                        data: yearlyData.map(d => d.cumulative), 
+                        type: 'line',
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true,
+                plugins: { 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } },
+                    legend: { position: 'bottom' }
+                },
+                scales: { y: { ticks: { callback: (val) => formatCurrency(val) } } }
+            }
+        });
+        
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        pieChartObj = new Chart(ctxPie, {
+            type: 'pie',
+            data: { 
+                labels: ['Total Investment', 'Net Profit'], 
+                datasets: [{ 
+                    data: [totalInvestment, netProfit > 0 ? netProfit : 0], 
+                    backgroundColor: ['#ef4444', '#10b981'] 
+                }] 
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatCurrency(ctx.raw)}` } },
+                    legend: { position: 'bottom' }
+                } 
+            }
+        });
+    }
+
+    function updateUI(result, yearlyData, initial, cashflows) {
+        document.getElementById('totalInvestment').innerHTML = formatCurrency(result.totalInvestment);
+        document.getElementById('totalInflow').innerHTML = formatCurrency(result.totalInflow);
+        document.getElementById('netProfit').innerHTML = formatCurrency(result.netProfit);
+        document.getElementById('irrValue').innerHTML = isNaN(result.irr) ? 'N/A' : result.irr.toFixed(2) + '%';
+        
+        const infoDiv = document.getElementById('infoMsg');
+        if (!isNaN(result.irr)) {
+            if (result.irr >= 20) {
+                infoDiv.className = "info-badge excellent";
+                infoDiv.innerHTML = `🚀 <strong>Excellent IRR!</strong> Your investment returns ${result.irr.toFixed(2)}% annually. This is an outstanding investment opportunity! 💰`;
+            } else if (result.irr >= 12) {
+                infoDiv.className = "info-badge good";
+                infoDiv.innerHTML = `📈 <strong>Good IRR!</strong> Your investment returns ${result.irr.toFixed(2)}% annually. Above market average! 🎯`;
+            } else if (result.irr >= 8) {
+                infoDiv.className = "info-badge";
+                infoDiv.innerHTML = `📊 <strong>Moderate IRR</strong> of ${result.irr.toFixed(2)}%. Decent returns, but look for better opportunities. 💡`;
+            } else if (result.irr >= 0) {
+                infoDiv.className = "info-badge poor";
+                infoDiv.innerHTML = `⚠️ <strong>Low IRR</strong> of ${result.irr.toFixed(2)}%. Consider alternative investments with better returns. 📉`;
+            } else {
+                infoDiv.className = "info-badge bad";
+                infoDiv.innerHTML = `❌ <strong>Negative IRR</strong> of ${result.irr.toFixed(2)}%. This investment is losing value! Consider exiting. 🔥`;
+            }
+        } else {
+            infoDiv.className = "info-badge";
+            infoDiv.innerHTML = `⚠️ Could not calculate IRR. Please check your cash flows (need at least one positive and one negative cash flow).`;
+        }
+        
+        const tbody = document.getElementById('cashflowTable');
+        tbody.innerHTML = '';
+        let cumulativeNPV = 0;
+        yearlyData.forEach((d, idx) => {
+            cumulativeNPV += d.npvContribution;
+            tbody.innerHTML += `<tr>
+                <td>${d.year}</td>
+                <td>${formatCurrency(d.cashflow)}</td>
+                <td>${formatCurrency(d.cumulative)}</td>
+                <td>${formatCurrency(d.pv)}</td>
+                <td>${formatCurrency(cumulativeNPV)}</td>
+            </tr>`;
+        });
+        
+        destroyCharts();
+        renderCharts(yearlyData, result.totalInvestment, result.netProfit);
+        document.getElementById('resultsArea').classList.remove('hidden');
+        
+        currentCashflows = cashflows;
+        currentIRR = result.irr;
+    }
+
+    function getCashflowsFromInputs() {
+        let initial = parseFloat(document.getElementById('initialInvestment').value);
+        if (isNaN(initial)) initial = -500000;
+        
+        let cashflows = [];
+        const cashflowElements = document.querySelectorAll('.cashflow-item');
+        
+        cashflowElements.forEach(el => {
+            let year = parseInt(el.querySelector('.cashflow-year')?.value) || 0;
+            let amount = parseFloat(el.querySelector('.cashflow-amount')?.value) || 0;
+            if (year > 0 && amount !== 0) {
+                cashflows.push({ year, amount });
+            }
+        });
+        
+        cashflows.sort((a, b) => a.year - b.year);
+        return { initial, cashflows };
+    }
+
+    function updateURLAndCalculate() {
+        let { initial, cashflows } = getCashflowsFromInputs();
+        
+        if (cashflows.length === 0) {
+            showToast('⚠️ Please add at least one future cash flow');
+            return;
+        }
+        
+        const result = processCashflows(initial, cashflows);
+        updateUI(result, result.yearlyData, initial, cashflows);
+        
+        const params = new URLSearchParams();
+        params.set('initial', initial);
+        params.set('cf_count', cashflows.length);
+        cashflows.forEach((cf, idx) => {
+            params.set(`cf_${idx}_year`, cf.year);
+            params.set(`cf_${idx}_amount`, cf.amount);
+        });
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    }
+
+    let cashflowCounter = 0;
+
+    function addCashflowRow(year = '', amount = '') {
+        const container = document.getElementById('cashflowList');
+        const div = document.createElement('div');
+        div.className = 'cashflow-item';
+        const yearVal = year || (cashflowCounter + 1);
+        div.innerHTML = `
+            <input type="number" class="cashflow-year" placeholder="Year" value="${yearVal}" min="1" max="50" style="width:80px">
+            <input type="number" class="cashflow-amount" placeholder="Amount (₹)" value="${amount}" step="10000" style="flex:1">
+            <button type="button" class="remove-cashflow" style="background:#ef4444; color:white; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer;">✕</button>
+        `;
+        container.appendChild(div);
+        
+        div.querySelector('.remove-cashflow').addEventListener('click', () => {
+            div.remove();
+            if (document.getElementById('resultsArea') && !document.getElementById('resultsArea').classList.contains('hidden')) {
+                updateURLAndCalculate();
+            }
+        });
+        
+        const inputs = div.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                if (document.getElementById('resultsArea') && !document.getElementById('resultsArea').classList.contains('hidden')) {
+                    updateURLAndCalculate();
+                }
+            });
+        });
+        
+        cashflowCounter++;
+    }
+
+    function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('initial')) {
+            document.getElementById('initialInvestment').value = params.get('initial');
+            const count = parseInt(params.get('cf_count')) || 0;
+            
+            const container = document.getElementById('cashflowList');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                let year = params.get(`cf_${i}_year`);
+                let amount = params.get(`cf_${i}_amount`);
+                if (year && amount) {
+                    addCashflowRow(year, amount);
+                }
+            }
+            
+            if (count === 0) {
+                addCashflowRow(1, '100000');
+                addCashflowRow(2, '120000');
+                addCashflowRow(3, '150000');
+                addCashflowRow(4, '180000');
+                addCashflowRow(5, '200000');
+            }
+            
+            updateURLAndCalculate();
+            
+            if (params.get('autoDownload') === 'true') {
+                setTimeout(() => {
+                    executePDFGeneration().then(() => {
+                        setTimeout(() => window.close(), 1000);
+                    }).catch(console.error);
+                }, 1500);
+            }
+        } else {
+            addCashflowRow(1, '100000');
+            addCashflowRow(2, '120000');
+            addCashflowRow(3, '150000');
+            addCashflowRow(4, '180000');
+            addCashflowRow(5, '200000');
+        }
+    }
+
+    function startPdfCountdown() {
+        const resultsElement = document.getElementById('resultsArea');
+        if (!resultsElement || resultsElement.classList.contains('hidden')) {
+            showToast('⚠️ Please calculate IRR first to generate PDF report.');
+            return;
+        }
+        // ... (same PDF countdown logic as previous calculators)
+        const downloadBtn = document.getElementById('downloadPdfBtn');
+        if (downloadBtn.disabled) return;
+        let timeLeft = 8;
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+        const promoOverlay = document.getElementById('promoOverlay');
+        const promoCountdown = document.getElementById('promoCountdown');
+        promoOverlay.classList.remove('hidden');
+        setTimeout(() => promoOverlay.classList.add('show'), 10);
+        if (promoCountdown) promoCountdown.innerText = timeLeft;
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+                if (promoCountdown) promoCountdown.innerText = timeLeft;
+                if (timeLeft === 3) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300);
+                }
+            } else {
+                clearInterval(timerInterval);
+                downloadBtn.innerHTML = `📄 Generating...`;
+                if (promoOverlay.classList.contains('show')) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300);
+                }
+                executePDFGeneration().then(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }).catch(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                });
+            }
+        }, 1000);
+    }
+
+    async function executePDFGeneration() {
+        showToast('📄 Generating PDF report, please wait...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const elementToPrint = document.getElementById('resultsArea').cloneNode(true);
+        const headerDiv = document.createElement('div');
+        headerDiv.style.textAlign = 'center';
+        headerDiv.style.marginBottom = '20px';
+        headerDiv.style.padding = '10px';
+        headerDiv.style.borderBottom = '1px solid #ccc';
+        headerDiv.innerHTML = `<h2 style="color: #06b6d4;">📊 IRR Investment Report</h2>
+                               <p>Generated on ${new Date().toLocaleString()} | Internal Rate of Return Calculator</p>`;
+        elementToPrint.insertBefore(headerDiv, elementToPrint.firstChild);
+        
+        const originalCanvases = document.getElementById('resultsArea').querySelectorAll('canvas');
+        const clonedCanvases = elementToPrint.querySelectorAll('canvas');
+        originalCanvases.forEach((canvas, index) => {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.width = '100%';
+            img.style.maxWidth = '400px';
+            img.style.margin = '0 auto';
+            img.style.display = 'block';
+            if (clonedCanvases[index]?.parentNode) {
+                clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
+            }
+        });
+
+        const footerDiv = document.createElement('div');
+        footerDiv.style.textAlign = 'center';
+        footerDiv.style.marginTop = '40px';
+        footerDiv.style.paddingTop = '20px';
+        footerDiv.style.borderTop = '1px solid #e2e8f0';
+        const promoImg = document.createElement('img');
+        promoImg.src = 'https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png';
+        promoImg.style.maxWidth = '100%';
+        promoImg.style.borderRadius = '12px';
+        await new Promise(resolve => { promoImg.onload = resolve; promoImg.onerror = resolve; });
+        const creditText = document.createElement('p');
+        creditText.innerHTML = 'Created by <a href="https://bhuvanesh-m-dev.github.io/calculator/">https://bhuvanesh-m-dev.github.io/calculator/</a>';
+        footerDiv.appendChild(promoImg);
+        footerDiv.appendChild(creditText);
+        elementToPrint.appendChild(footerDiv);
+        
+        const opt = { margin: [0.5, 0.5, 0.5, 0.5], filename: `IRR_Report_${new Date().toISOString().slice(0,10)}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+        try {
+            await html2pdf().set(opt).from(elementToPrint).save();
+            showToast('✅ PDF downloaded successfully!');
+        } catch (err) {
+            showToast('❌ PDF generation failed.');
+            throw err;
+        }
+    }
+
+    function getShareMessage() {
+        const irr = document.getElementById('irrValue').innerText;
+        const totalInv = document.getElementById('totalInvestment').innerText;
+        const netProfit = document.getElementById('netProfit').innerText;
+        return `📊 *IRR Results* 📊\n\n💰 Total Investment: ${totalInv}\n💵 Net Profit: ${netProfit}\n⚡ IRR: ${irr}\n\n🔗 Full Report: ${window.location.href}`;
+    }
+
+    document.getElementById('irrForm').addEventListener('submit', (e) => { e.preventDefault(); updateURLAndCalculate(); });
+    document.getElementById('irrForm').addEventListener('reset', () => { window.location.href = window.location.pathname; location.reload(); });
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark-mode');
+        localStorage.setItem('irr-theme', document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light');
+        if (currentCashflows.length) updateURLAndCalculate();
+    });
+    document.getElementById('homeBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+    document.getElementById('shareWA').addEventListener('click', () => { window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank'); });
+    document.getElementById('shareTG').addEventListener('click', () => { window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(getShareMessage())}`, '_blank'); });
+    document.getElementById('copyLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(window.location.href); showToast('✅ Link copied!'); });
+    document.getElementById('downloadPdfBtn').addEventListener('click', startPdfCountdown);
+    document.getElementById('addCashflowBtn').addEventListener('click', () => addCashflowRow());
+    
+    if (localStorage.getItem('irr-theme') === 'dark') document.documentElement.classList.add('dark-mode');
+    loadFromURL();
+</script>
+</body>
+</html>
