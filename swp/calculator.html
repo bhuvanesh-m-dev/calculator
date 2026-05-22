@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SWP Calculator - PDF Report & Retirement Planner</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        :root {
+            --primary-color: #f59e0b;
+            --primary-dark: #d97706;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #ef4444;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        html.dark-mode {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            transition: var(--transition);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            padding: 24px 0 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #ef4444);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .home-btn {
+            width: auto;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .calculator-card, .results-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .input-group input {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-download {
+            background: var(--success-color);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+        }
+        .btn-download:hover:not(:disabled) {
+            background: #0b9e6e;
+            transform: translateY(-1px);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-top: 8px;
+        }
+
+        .info-badge {
+            background: var(--background);
+            border-radius: 60px;
+            padding: 12px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .info-badge.warning {
+            border-left: 4px solid var(--warning-color);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .info-badge.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .chart-box {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-box h3 {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        canvas {
+            max-height: 260px;
+            width: 100%;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        th {
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .share-btn {
+            padding: 10px 20px;
+            border-radius: 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .share-btn:hover {
+            background: var(--border);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Promo Overlay Styling */
+        .promo-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .promo-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .promo-content {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+        }
+        .promo-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+        .promo-content p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .promo-content img {
+            width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* PDF Export specific styling */
+        @media print {
+            .btn, .share-buttons, .header-actions, .btn-group, .calculator-card form, .iframe-container, .footer .share-buttons, #downloadPdfBtn, .share-btn, .promo-overlay {
+                display: none !important;
+            }
+            .results-area, #resultsArea {
+                display: block !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .charts-row { grid-template-columns: 1fr; }
+            .results-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>💸 SWP Calculator</h1>
+            <div class="subtitle">Systematic Withdrawal Plan • Retirement Income Projection with Inflation Adjustment • PDF Export</div>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn home-btn" id="homeBtn">🏠 Home</button>
+            <button class="icon-btn" id="themeToggle">🌙</button>
+        </div>
+    </div>
+
+    <div class="calculator-card">
+        <form id="swpForm">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>💰 Initial Investment (₹)</label>
+                    <input type="number" id="principalAmount" step="100000" value="5000000">
+                </div>
+                <div class="input-group">
+                    <label>📅 Monthly Withdrawal (₹)</label>
+                    <input type="number" id="withdrawalAmount" step="1000" value="25000">
+                </div>
+                <div class="input-group">
+                    <label>📈 Expected Return (% p.a.)</label>
+                    <input type="number" id="annualReturn" step="0.5" value="12">
+                </div>
+                <div class="input-group">
+                    <label>⏰ Time Period (Years)</label>
+                    <input type="number" id="yearsVal" step="1" value="20">
+                </div>
+                <div class="input-group">
+                    <label>📊 Withdrawal Step-up (% yearly)</label>
+                    <input type="number" id="stepupVal" step="0.5" value="0">
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="enableInflationCheckbox"> 🧮 Adjust for Inflation
+                </label>
+                <div id="inflationDiv" style="display: none;">
+                    <input type="number" id="inflationRate" placeholder="Inflation % p.a." value="6" step="0.5" style="padding: 8px; border-radius: 8px; border:1px solid var(--border); width:140px;">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">🚀 Calculate SWP</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+                <button type="button" id="downloadPdfBtn" class="btn btn-download">📄 Download as PDF</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Area (will be exported to PDF) -->
+    <div id="resultsArea" class="hidden">
+        <div class="results-grid">
+            <div class="stat-card"><div class="stat-label">💸 TOTAL WITHDRAWN</div><div class="stat-value" id="totalWithdrawn">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">📈 TOTAL INTEREST EARNED</div><div class="stat-value" id="totalInterest">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">🏆 FINAL BALANCE</div><div class="stat-value" id="finalBalance">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">📊 EFFECTIVE YIELD</div><div class="stat-value" id="effectiveYield">0%</div></div>
+        </div>
+
+        <div class="info-badge" id="infoMsg">
+            💙 Your SWP plan summary will appear here.
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-box"><h3>📊 Corpus Balance Over Years</h3><canvas id="lineChart"></canvas></div>
+            <div class="chart-box"><h3>🥧 Withdrawn vs Remaining</h3><canvas id="pieChart"></canvas></div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="yearlyTableWrapper">
+                <thead>
+                    <tr><th>Year</th><th>Yearly Withdrawal</th><th>Total Withdrawn</th><th>Interest Earned (Year)</th><th>Year End Balance</th></tr>
+                </thead>
+                <tbody id="yearlyTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="share-buttons" id="shareButtons">
+        <button class="share-btn" id="shareWA">📱 WhatsApp</button>
+        <button class="share-btn" id="shareTG">✈️ Telegram</button>
+        <button class="share-btn" id="copyLinkBtn">🔗 Copy Link</button>
+    </div>
+
+    <footer class="footer">
+        <p>Made with 💙 by Bhuvanesh | SWP Calculator - Plan Your Retirement Income | 📄 Save as PDF with one click</p>
+    </footer>
+
+    <!-- Promo Overlay during PDF Countdown -->
+    <div id="promoOverlay" class="promo-overlay hidden">
+        <div class="promo-content">
+            <h3>✨ While you wait...</h3>
+            <p>Check out my other projects and tools!</p>
+            <img src="https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png" alt="My Projects Banner">
+            <p style="font-weight: 600; color: var(--text-primary); margin-top: 10px;">
+                PDF download starting in <span id="promoCountdown">8</span>s...
+            </p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+</div>
+
+<!-- Extra iframe banner (outside PDF export area but visible on web) -->
+<div class="iframe-container" style="position: relative; width: 100%; padding-top: 60%; overflow: hidden; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px;">
+    <iframe 
+        src="https://bhuvanesh-m-dev.github.io/projects/banner/index.html" 
+        class="responsive-iframe"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+        allowfullscreen
+        title="My Other Projects">
+    </iframe>
+</div>
+<img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+
+<script>
+    let lineChartObj = null, pieChartObj = null;
+    let currentYearlyData = null;
+    let currentResultData = null;
+    let currentInflationAdjValue = 0;
+    let currentInflationRateUsed = 0;
+    let currentYearsNum = 0;
+
+    function formatCurrency(amt) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function calculateSWPDetails(principal, monthlyWithdrawal, annualReturn, years, stepup) {
+        let monthlyRate = annualReturn / 12 / 100;
+        let balance = principal;
+        let totalWithdrawn = 0;
+        let totalInterest = 0;
+        let yearlyData = [];
+        let currentMonthlyWithdrawal = monthlyWithdrawal;
+        let corpusDepletedYear = null;
+        
+        for (let y = 1; y <= years; y++) {
+            let yearlyWithdrawn = 0;
+            let yearlyInterest = 0;
+            let openingBalance = balance;
+            
+            for (let m = 1; m <= 12; m++) {
+                if (balance <= 0) break;
+                
+                // Earn interest on current balance
+                let interest = balance * monthlyRate;
+                yearlyInterest += interest;
+                totalInterest += interest;
+                balance += interest;
+                
+                // Withdraw amount (limited to whatever balance is left)
+                let actualWithdrawal = Math.min(balance, currentMonthlyWithdrawal);
+                balance -= actualWithdrawal;
+                yearlyWithdrawn += actualWithdrawal;
+                totalWithdrawn += actualWithdrawal;
+            }
+            
+            yearlyData.push({
+                year: y,
+                openingBalance: openingBalance,
+                yearlyWithdrawn: yearlyWithdrawn,
+                totalWithdrawnSoFar: totalWithdrawn,
+                yearlyInterest: yearlyInterest,
+                closingBalance: Math.max(0, balance)
+            });
+            
+            if (balance <= 0 && corpusDepletedYear === null) {
+                corpusDepletedYear = y;
+            }
+            
+            // Step up withdrawal amount for the next year
+            if (y < years && stepup > 0) {
+                currentMonthlyWithdrawal = currentMonthlyWithdrawal * (1 + stepup / 100);
+            }
+        }
+        
+        // Calculate Effective Yield = (Total Interest / Principal) / Years * 100
+        let effectiveYield = 0;
+        if (principal > 0 && years > 0) {
+            effectiveYield = (totalInterest / principal) / years * 100;
+        }
+        
+        return {
+            principal,
+            totalWithdrawn,
+            totalInterest,
+            finalBalance: Math.max(0, balance),
+            yearlyData,
+            corpusDepletedYear,
+            effectiveYield
+        };
+    }
+
+    function getInflationAdjusted(value, inflationRate, years) {
+        if (!inflationRate || inflationRate <= 0) return value;
+        let factor = Math.pow(1 + inflationRate / 100, years);
+        return value / factor;
+    }
+
+    function destroyCharts() {
+        if (lineChartObj) { lineChartObj.destroy(); lineChartObj = null; }
+        if (pieChartObj) { pieChartObj.destroy(); pieChartObj = null; }
+    }
+
+    function renderCharts(yearlyData, totalWithdrawn, finalBalance) {
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        const labels = yearlyData.map(d => `Y${d.year}`);
+        lineChartObj = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { 
+                        label: 'Corpus Balance', 
+                        data: yearlyData.map(d => d.closingBalance), 
+                        borderColor: '#f59e0b', 
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)', 
+                        fill: true, 
+                        tension: 0.3, 
+                        borderWidth: 3 
+                    },
+                    { 
+                        label: 'Total Withdrawn', 
+                        data: yearlyData.map(d => d.totalWithdrawnSoFar), 
+                        borderColor: '#ef4444', 
+                        borderDash: [5, 5], 
+                        fill: false, 
+                        borderWidth: 2 
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true,
+                plugins: { 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } },
+                    legend: { position: 'bottom' }
+                },
+                scales: { y: { ticks: { callback: (val) => formatCurrency(val) } } }
+            }
+        });
+        
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        pieChartObj = new Chart(ctxPie, {
+            type: 'pie',
+            data: { 
+                labels: ['Total Withdrawn', 'Final Balance'], 
+                datasets: [{ 
+                    data: [totalWithdrawn, finalBalance], 
+                    backgroundColor: ['#f59e0b', '#10b981'] 
+                }] 
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatCurrency(ctx.raw)} (${((ctx.raw/(totalWithdrawn+finalBalance))*100).toFixed(1)}%)` } },
+                    legend: { position: 'bottom' }
+                } 
+            }
+        });
+    }
+
+    function updateUI(result, yearlyData, inflationAdjBalance, inflationRate, years) {
+        document.getElementById('totalWithdrawn').innerHTML = formatCurrency(result.totalWithdrawn);
+        document.getElementById('totalInterest').innerHTML = formatCurrency(result.totalInterest);
+        document.getElementById('finalBalance').innerHTML = formatCurrency(result.finalBalance);
+        document.getElementById('effectiveYield').innerHTML = result.effectiveYield.toFixed(2) + '%';
+        
+        const infoDiv = document.getElementById('infoMsg');
+        
+        if (result.corpusDepletedYear) {
+            infoDiv.className = "info-badge warning";
+            if (inflationRate > 0) {
+                infoDiv.innerHTML = `⚠️ <strong>Attention:</strong> Your corpus will deplete in <strong>Year ${result.corpusDepletedYear}</strong> (${inflationRate}% inflation adjusted: ${formatCurrency(inflationAdjBalance)} in today's value). Consider lower withdrawal or higher returns!`;
+            } else {
+                infoDiv.innerHTML = `⚠️ <strong>Attention:</strong> Your corpus will deplete in <strong>Year ${result.corpusDepletedYear}</strong> based on these withdrawal parameters!`;
+            }
+        } else {
+            infoDiv.className = "info-badge success";
+            if (inflationRate > 0) {
+                infoDiv.innerHTML = `💙 Fantastic! You can withdraw ${formatCurrency(result.totalWithdrawn)} over ${years} years and still leave a legacy of ${formatCurrency(result.finalBalance)}. Inflation adjusted value: ${formatCurrency(inflationAdjBalance)} in today's money. 🎉`;
+            } else {
+                infoDiv.innerHTML = `💙 Fantastic! You can withdraw ${formatCurrency(result.totalWithdrawn)} over ${years} years and still leave a legacy of ${formatCurrency(result.finalBalance)}. Keep growing! 🎉`;
+            }
+        }
+        
+        const tbody = document.getElementById('yearlyTable');
+        tbody.innerHTML = '';
+        yearlyData.forEach(d => {
+            tbody.innerHTML += `<tr>
+                <td>${d.year}</td>
+                <td>${formatCurrency(d.yearlyWithdrawn)}</td>
+                <td>${formatCurrency(d.totalWithdrawnSoFar)}</td>
+                <td>${formatCurrency(d.yearlyInterest)}</td>
+                <td>${formatCurrency(d.closingBalance)}</td>
+            </tr>`;
+        });
+        
+        destroyCharts();
+        renderCharts(yearlyData, result.totalWithdrawn, result.finalBalance);
+        document.getElementById('resultsArea').classList.remove('hidden');
+        
+        // Store data for PDF
+        currentYearlyData = yearlyData;
+        currentResultData = result;
+        currentInflationAdjValue = inflationAdjBalance;
+        currentInflationRateUsed = inflationRate;
+        currentYearsNum = years;
+    }
+
+    function startPdfCountdown() {
+        const resultsElement = document.getElementById('resultsArea');
+        if (!resultsElement || resultsElement.classList.contains('hidden')) {
+            showToast('⚠️ Please calculate SWP first to generate PDF report.');
+            return;
+        }
+
+        const downloadBtn = document.getElementById('downloadPdfBtn');
+        if (downloadBtn.disabled) return;
+
+        let timeLeft = 8;
+        const originalText = downloadBtn.innerHTML;
+        
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+        
+        const promoOverlay = document.getElementById('promoOverlay');
+        const promoCountdown = document.getElementById('promoCountdown');
+        promoOverlay.classList.remove('hidden');
+        
+        setTimeout(() => promoOverlay.classList.add('show'), 10);
+        if (promoCountdown) promoCountdown.innerText = timeLeft;
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                downloadBtn.innerHTML = `⏳ Starts in ${timeLeft}s...`;
+                if (promoCountdown) promoCountdown.innerText = timeLeft;
+                
+                if (timeLeft === 3) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300);
+                }
+            } else {
+                clearInterval(timerInterval);
+                downloadBtn.innerHTML = `📄 Generating...`;
+                
+                if (promoOverlay.classList.contains('show')) {
+                    promoOverlay.classList.remove('show');
+                    setTimeout(() => promoOverlay.classList.add('hidden'), 300);
+                }
+                
+                executePDFGeneration().then(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }).catch(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                });
+            }
+        }, 1000);
+    }
+
+    async function executePDFGeneration() {
+        showToast('📄 Generating PDF report, please wait...');
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        const elementToPrint = document.getElementById('resultsArea').cloneNode(true);
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.style.textAlign = 'center';
+        headerDiv.style.marginBottom = '20px';
+        headerDiv.style.padding = '10px';
+        headerDiv.style.borderBottom = '1px solid #ccc';
+        headerDiv.innerHTML = `<h2 style="color: #f59e0b;">💸 SWP Withdrawal Report</h2>
+                               <p style="color: #64748b;">Generated on ${new Date().toLocaleString()} | Systematic Withdrawal Plan Calculator</p>`;
+        elementToPrint.insertBefore(headerDiv, elementToPrint.firstChild);
+        
+        const originalCanvases = document.getElementById('resultsArea').querySelectorAll('canvas');
+        const clonedCanvases = elementToPrint.querySelectorAll('canvas');
+        
+        originalCanvases.forEach((canvas, index) => {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.width = '100%';
+            img.style.maxWidth = '400px'; 
+            img.style.height = 'auto';
+            img.style.margin = '0 auto';
+            img.style.display = 'block';
+            if (clonedCanvases[index] && clonedCanvases[index].parentNode) {
+                clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
+            }
+        });
+
+        const footerDiv = document.createElement('div');
+        footerDiv.style.textAlign = 'center';
+        footerDiv.style.marginTop = '40px';
+        footerDiv.style.paddingTop = '20px';
+        footerDiv.style.borderTop = '1px solid #e2e8f0';
+        footerDiv.style.pageBreakInside = 'avoid';
+
+        const promoImg = document.createElement('img');
+        promoImg.crossOrigin = 'anonymous';
+        promoImg.style.maxWidth = '100%';
+        promoImg.style.borderRadius = '12px';
+        promoImg.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        promoImg.style.marginBottom = '15px';
+
+        await new Promise((resolve) => {
+            promoImg.onload = resolve;
+            promoImg.onerror = resolve;
+            promoImg.src = 'https://raw.githubusercontent.com/bhuvanesh-m-dev/bhuvanesh-m-dev.github.io/refs/heads/main/projects/banner/pdf/Screenshot%20from%202026-05-20%2008-09-21.png';
+        });
+
+        const creditText = document.createElement('p');
+        creditText.style.color = '#64748b';
+        creditText.style.fontSize = '14px';
+        creditText.style.fontWeight = '500';
+        creditText.innerHTML = 'Created by <a href="https://bhuvanesh-m-dev.github.io/calculator/" style="color: #f59e0b; text-decoration: none;">https://bhuvanesh-m-dev.github.io/calculator/</a>';
+
+        footerDiv.appendChild(promoImg);
+        footerDiv.appendChild(creditText);
+        elementToPrint.appendChild(footerDiv);
+        
+        const dateStr = new Date().toISOString().slice(0,10);
+        const safeFilename = `SWP_Report_${dateStr}_by_bhuvanesh-m-dev.github.io_calculator.pdf`;
+        
+        const opt = {
+            margin:        [0.5, 0.5, 0.5, 0.5],
+            filename:      safeFilename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, letterRendering: true, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        try {
+            await html2pdf().set(opt).from(elementToPrint).save();
+            showToast('✅ PDF downloaded successfully!');
+        } catch (err) {
+            console.error('PDF Error:', err);
+            showToast('❌ PDF generation failed. Please try again.');
+            throw err;
+        }
+    }
+
+    function updateURLAndCalculate() {
+        let principal = parseFloat(document.getElementById('principalAmount').value);
+        let withdrawal = parseFloat(document.getElementById('withdrawalAmount').value);
+        let annualRet = parseFloat(document.getElementById('annualReturn').value);
+        let years = parseInt(document.getElementById('yearsVal').value);
+        let stepup = parseFloat(document.getElementById('stepupVal').value) || 0;
+        let enableInflation = document.getElementById('enableInflationCheckbox').checked;
+        let inflation = enableInflation ? parseFloat(document.getElementById('inflationRate').value) || 0 : 0;
+        
+        if (isNaN(principal) || principal < 10000) { showToast('⚠️ Minimum Investment ₹10,000'); return; }
+        if (isNaN(withdrawal) || withdrawal < 500) { showToast('⚠️ Minimum Withdrawal ₹500'); return; }
+        if (annualRet < 0 || annualRet > 30) { showToast('Return between 0-30%'); return; }
+        if (years < 1 || years > 60) { showToast('Years between 1-60'); return; }
+        if (inflation < 0) inflation = 0;
+        
+        const result = calculateSWPDetails(principal, withdrawal, annualRet, years, stepup);
+        let inflationAdjBalance = result.finalBalance;
+        if (enableInflation && inflation > 0) {
+            inflationAdjBalance = getInflationAdjusted(result.finalBalance, inflation, years);
+        }
+        updateUI(result, result.yearlyData, inflationAdjBalance, enableInflation ? inflation : 0, years);
+        
+        const params = new URLSearchParams();
+        params.set('principal', principal);
+        params.set('withdrawal', withdrawal);
+        params.set('return', annualRet);
+        params.set('years', years);
+        if (stepup > 0) params.set('stepup', stepup);
+        if (enableInflation && inflation > 0) {
+            params.set('inflation', inflation);
+            params.set('adj_inflation', '1');
+        }
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    }
+
+    function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('principal')) {
+            document.getElementById('principalAmount').value = params.get('principal');
+            document.getElementById('withdrawalAmount').value = params.get('withdrawal') || '25000';
+            document.getElementById('annualReturn').value = params.get('return') || '12';
+            document.getElementById('yearsVal').value = params.get('years') || '20';
+            document.getElementById('stepupVal').value = params.get('stepup') || '0';
+            if (params.get('adj_inflation') === '1' && params.has('inflation')) {
+                document.getElementById('enableInflationCheckbox').checked = true;
+                document.getElementById('inflationDiv').style.display = 'inline-block';
+                document.getElementById('inflationRate').value = params.get('inflation');
+            } else {
+                document.getElementById('enableInflationCheckbox').checked = false;
+                document.getElementById('inflationDiv').style.display = 'none';
+            }
+            updateURLAndCalculate();
+
+            if (params.get('autoDownload') === 'true') {
+                setTimeout(() => {
+                    executePDFGeneration().then(() => {
+                        setTimeout(() => window.close(), 1000);
+                    }).catch(console.error);
+                }, 1500);
+            }
+        }
+    }
+
+    function getShareMessage() {
+        if (!currentResultData) return "SWP Calculator: Use the link to view your retirement plan!";
+        const withdrawn = formatCurrency(currentResultData.totalWithdrawn);
+        const interest = formatCurrency(currentResultData.totalInterest);
+        const remaining = formatCurrency(currentResultData.finalBalance);
+        const yieldVal = currentResultData.effectiveYield.toFixed(2);
+        const principal = document.getElementById('principalAmount').value;
+        const withdrawal = document.getElementById('withdrawalAmount').value;
+        const ret = document.getElementById('annualReturn').value;
+        const yrs = document.getElementById('yearsVal').value;
+        let msg = `💸 *SWP Results* 💸\n\n`;
+        msg += `💰 Initial Investment: ₹${parseInt(principal).toLocaleString()}\n`;
+        msg += `📅 Monthly Withdrawal: ₹${parseInt(withdrawal).toLocaleString()}\n`;
+        msg += `📈 Expected Return: ${ret}% p.a.\n`;
+        msg += `⏱️ Time Period: ${yrs} years\n`;
+        msg += `✅ Total Withdrawn: ${withdrawn}\n`;
+        msg += `📈 Total Interest Earned: ${interest}\n`;
+        msg += `🏆 Remaining Corpus: ${remaining}\n`;
+        msg += `📊 Effective Yield: ${yieldVal}%\n\n`;
+        msg += `🔗 Full Report: ${window.location.href}`;
+        return msg;
+    }
+
+    // Event Listeners
+    document.getElementById('swpForm').addEventListener('submit', (e) => { e.preventDefault(); updateURLAndCalculate(); });
+    document.getElementById('swpForm').addEventListener('reset', () => { 
+        window.location.href = window.location.pathname; 
+        location.reload(); 
+    });
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark-mode');
+        localStorage.setItem('swp-theme', document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light');
+        if (currentYearlyData && currentResultData) {
+            destroyCharts();
+            renderCharts(currentYearlyData, currentResultData.totalWithdrawn, currentResultData.finalBalance);
+        }
+    });
+    document.getElementById('homeBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+    document.getElementById('shareWA').addEventListener('click', () => { 
+        if (!currentResultData) { showToast("Calculate SWP first"); return; }
+        window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank'); 
+    });
+    document.getElementById('shareTG').addEventListener('click', () => { 
+        if (!currentResultData) { showToast("Calculate SWP first"); return; }
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(getShareMessage())}`, '_blank'); 
+    });
+    document.getElementById('copyLinkBtn').addEventListener('click', () => { 
+        navigator.clipboard.writeText(window.location.href); 
+        showToast('✅ Link copied! Share your calculations.'); 
+    });
+    
+    document.getElementById('downloadPdfBtn').addEventListener('click', startPdfCountdown);
+    
+    document.getElementById('enableInflationCheckbox').addEventListener('change', (e) => {
+        document.getElementById('inflationDiv').style.display = e.target.checked ? 'inline-block' : 'none';
+        if (document.getElementById('resultsArea') && !document.getElementById('resultsArea').classList.contains('hidden')) {
+            updateURLAndCalculate();
+        }
+    });
+    document.getElementById('inflationRate')?.addEventListener('change', () => {
+        if (document.getElementById('resultsArea') && !document.getElementById('resultsArea').classList.contains('hidden')) updateURLAndCalculate();
+    });
+    
+    // Theme init
+    if (localStorage.getItem('swp-theme') === 'dark') document.documentElement.classList.add('dark-mode');
+    loadFromURL();
+</script>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>

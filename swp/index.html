@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SWP Calculator | Smart Withdrawal Planner with Inflation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --primary-light: #fcd34d;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --bg-gradient: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .entry-container {
+            max-width: 580px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fun-card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .fun-header {
+            margin-bottom: 32px;
+        }
+
+        .fun-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .fun-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .emoji-big {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+            background: white;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 40px;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        }
+
+        .funny-msg {
+            background: #fef3c7;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 24px;
+            color: #92400e;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 16px;
+        }
+
+        @media (max-width: 550px) {
+            .fun-card {
+                padding: 28px 20px;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="entry-container">
+        <div class="fun-card">
+            <div class="fun-header">
+                <div class="emoji-big">💸🏖️</div>
+                <h1>SWP Magic Planner</h1>
+                <p>Create passive income • Withdraw smartly with inflation insights</p>
+            </div>
+
+            <div class="input-group">
+                <label>💰 Initial Investment (₹)</label>
+                <input type="number" id="principalAmount" placeholder="e.g., 5000000" value="5000000" step="100000">
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>📅 Monthly Withdrawal (₹)</label>
+                    <input type="number" id="withdrawalAmount" placeholder="e.g., 25000" value="25000" step="1000">
+                </div>
+                <div class="input-group">
+                    <label>📈 Expected Return (% p.a.)</label>
+                    <input type="number" id="annualReturn" placeholder="e.g., 12" value="12" step="0.5">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>⏰ Time Period (Years)</label>
+                    <input type="number" id="periodYears" placeholder="e.g., 20" value="20" step="1">
+                </div>
+                <div class="input-group">
+                    <label>📊 Withdrawal Step-up (% yearly)</label>
+                    <input type="number" id="stepupPercent" placeholder="e.g., 5" value="0" step="0.5">
+                    <span style="font-size:11px; color:#6b7280;">Increase withdrawal annually</span>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="enableInflation"> 🧮 Adjust for Inflation
+                </label>
+                <div id="inflationInputGroup" style="display: none; flex:1;">
+                    <input type="number" id="inflationRate" placeholder="Inflation % p.a." value="6" step="0.5" style="width:100%; padding:10px;">
+                </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ Calculate & Create My SWP Link ✨</button>
+            <button class="generate-btn" id="downloadPdfIndexBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 12px;">📄 Download as PDF</button>
+
+            <div class="funny-msg" id="funnyMsg">
+                💙 "Create your own pension — SWP turns your corpus into monthly income!"
+            </div>
+
+            <div class="demo-hint">
+                💡 Tip: Enable inflation to see future purchasing power. Generate a shareable link with your custom SWP plan!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadPdfIndexBtn = document.getElementById('downloadPdfIndexBtn');
+        const principalInput = document.getElementById('principalAmount');
+        const withdrawalInput = document.getElementById('withdrawalAmount');
+        const returnInput = document.getElementById('annualReturn');
+        const yearsInput = document.getElementById('periodYears');
+        const stepupInput = document.getElementById('stepupPercent');
+        const enableInflationCheck = document.getElementById('enableInflation');
+        const inflationInputGroup = document.getElementById('inflationInputGroup');
+        const inflationRateInput = document.getElementById('inflationRate');
+        const funnyMsgDiv = document.getElementById('funnyMsg');
+
+        const funnyMessages = [
+            "💙 SWP: Your money works hard so you can rest easy!",
+            "🏖️ Monthly pension without selling assets — that's smart planning!",
+            "💰 Withdraw systematically, let the rest grow forever!",
+            "📈 Even in retirement, your corpus keeps compounding!",
+            "🎯 Beat inflation while enjoying regular income!",
+            "💎 Financial freedom = Monthly cashflow for life!",
+            "🌟 Create your own UBI (Universal Basic Income)!",
+            "🍷 Retire rich, withdraw smart — SWP is the secret!"
+        ];
+
+        function validateInputs() {
+            let principal = parseFloat(principalInput.value);
+            let withdrawal = parseFloat(withdrawalInput.value);
+            let ret = parseFloat(returnInput.value);
+            let years = parseInt(yearsInput.value);
+            let stepup = parseFloat(stepupInput.value);
+
+            if (isNaN(principal) || principal < 10000) {
+                principalInput.value = 1000000;
+                principal = 1000000;
+                funnyMsgDiv.innerHTML = "🐣 Starting with ₹10L? Great foundation for passive income!";
+            }
+            if (isNaN(withdrawal) || withdrawal < 500) {
+                withdrawalInput.value = 5000;
+                withdrawal = 5000;
+            }
+            if (isNaN(ret) || ret < 0) {
+                returnInput.value = 12;
+                ret = 12;
+            }
+            if (ret > 30) {
+                returnInput.value = 30;
+                ret = 30;
+            }
+            if (isNaN(years) || years < 1) {
+                yearsInput.value = 10;
+                years = 10;
+            }
+            if (years > 50) yearsInput.value = 50;
+            if (isNaN(stepup)) stepup = 0;
+            if (stepup > 20) stepupInput.value = 20;
+            if (stepup < 0) stepupInput.value = 0;
+            
+            return { principal, withdrawal, ret, years, stepup };
+        }
+
+        function getRandomFunnyMessage() {
+            return funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        }
+
+        // Simple SWP calculation for preview message
+        function calculateSWPPreview(principal, withdrawal, annualReturn, years, stepup) {
+            let monthlyRate = annualReturn / 12 / 100;
+            let balance = principal;
+            let currentWithdrawal = withdrawal;
+            
+            for (let y = 0; y < years; y++) {
+                for (let m = 0; m < 12; m++) {
+                    if (balance <= 0) break;
+                    let interest = balance * monthlyRate;
+                    balance += interest;
+                    let withdrawAmt = Math.min(balance, currentWithdrawal);
+                    balance -= withdrawAmt;
+                }
+                if (y < years - 1 && stepup > 0) {
+                    currentWithdrawal = currentWithdrawal * (1 + stepup / 100);
+                }
+                if (balance <= 0) break;
+            }
+            return Math.max(0, balance);
+        }
+
+        function getInflationAdjustedValue(futureValue, inflationRate, years) {
+            if (!inflationRate || inflationRate <= 0) return futureValue;
+            let factor = Math.pow(1 + inflationRate / 100, years);
+            return futureValue / factor;
+        }
+
+        function generateShareableLink() {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            let { principal, withdrawal, ret, years, stepup } = validated;
+            const enableInflation = enableInflationCheck.checked;
+            let inflation = 0;
+            if (enableInflation) {
+                inflation = parseFloat(inflationRateInput.value);
+                if (isNaN(inflation) || inflation < 0) inflation = 0;
+                if (inflation > 20) inflation = 20;
+            }
+            
+            // Build URL parameters for calculator page
+            const params = new URLSearchParams();
+            params.set('principal', principal);
+            params.set('withdrawal', withdrawal);
+            params.set('return', ret);
+            params.set('years', years);
+            if (stepup > 0) params.set('stepup', stepup);
+            if (enableInflation && inflation > 0) {
+                params.set('inflation', inflation);
+                params.set('adj_inflation', '1');
+            }
+            
+            // Link to calculator.html (same folder)
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            // Calculate estimated remaining corpus for fun message
+            let remainingCorpus = calculateSWPPreview(principal, withdrawal, ret, years, stepup);
+            let displayCorpus = remainingCorpus;
+            if (enableInflation && inflation > 0) {
+                displayCorpus = getInflationAdjustedValue(remainingCorpus, inflation, years);
+            }
+            
+            if (remainingCorpus <= 0) {
+                funnyMsgDiv.innerHTML = `⚠️ ${getRandomFunnyMessage()}<br>🔗 Warning: Corpus may deplete before ${years} years! Consider lower withdrawal.<br>Opening calculator in new tab...`;
+            } else {
+                funnyMsgDiv.innerHTML = `🎉 ${getRandomFunnyMessage()}<br>🔗 Estimated remaining corpus after ${years} years: ₹${Math.round(displayCorpus).toLocaleString()} ✨<br>Opening calculator in new tab...`;
+            }
+            
+            // Open calculator in new tab
+            window.open(fullUrl, '_blank');
+        }
+
+        // Toggle inflation input visibility
+        enableInflationCheck.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                inflationInputGroup.style.display = 'block';
+            } else {
+                inflationInputGroup.style.display = 'none';
+            }
+        });
+
+        generateBtn.addEventListener('click', generateShareableLink);
+        
+        downloadPdfIndexBtn.addEventListener('click', () => {
+            const validated = validateInputs();
+            if (!validated) return;
+            
+            let { principal, withdrawal, ret, years, stepup } = validated;
+            const enableInflation = enableInflationCheck.checked;
+            let inflation = 0;
+            if (enableInflation) {
+                inflation = parseFloat(inflationRateInput.value);
+                if (isNaN(inflation) || inflation < 0) inflation = 0;
+                if (inflation > 20) inflation = 20;
+            }
+            
+            const params = new URLSearchParams();
+            params.set('principal', principal);
+            params.set('withdrawal', withdrawal);
+            params.set('return', ret);
+            params.set('years', years);
+            if (stepup > 0) params.set('stepup', stepup);
+            if (enableInflation && inflation > 0) {
+                params.set('inflation', inflation);
+                params.set('adj_inflation', '1');
+            }
+            params.set('autoDownload', 'true');
+            
+            const baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '') + 'calculator.html';
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            funnyMsgDiv.innerHTML = `📄 Opening PDF generator and downloading...`;
+            window.open(fullUrl, '_blank');
+        });
+        
+        // Initial random funny message
+        funnyMsgDiv.innerHTML = `💙 ${getRandomFunnyMessage()}`;
+        
+        // Ensure inflation input is hidden initially
+        inflationInputGroup.style.display = 'none';
+    </script>
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
