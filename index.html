@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Smart Investment & Finance Calculators | SIP, SWP, CAGR, IRR, XIRR, Inflation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --radius: 28px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Calculator Theme Colors */
+        --sip-color: #3b82f6;
+        --swp-color: #f59e0b;
+        --cagr-color: #8b5cf6;
+        --inflation-color: #ef4444;
+        --irr-color: #06b6d4;
+        --xirr-color: #ec489a;
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 40px 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .tagline {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero .emoji {
+            font-size: 64px;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Grid Layout */
+        .calculators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 28px;
+            margin-bottom: 60px;
+        }
+
+        /* Calculator Card */
+        .calculator-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 28px;
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculator-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        /* Card accent border */
+        .calculator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-accent);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        /* Individual Card Accents */
+        .card-sip { --card-accent: #3b82f6; }
+        .card-swp { --card-accent: #f59e0b; }
+        .card-cagr { --card-accent: #8b5cf6; }
+        .card-inflation { --card-accent: #ef4444; }
+        .card-irr { --card-accent: #06b6d4; }
+        .card-xirr { --card-accent: #ec489a; }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 48px;
+            background: rgba(255, 255, 255, 0.08);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            transition: var(--transition);
+        }
+
+        .calculator-card:hover .card-icon {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            color: var(--text-secondary);
+        }
+
+        .arrow-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            color: var(--card-accent);
+        }
+
+        .calculator-card:hover .arrow-link {
+            gap: 12px;
+        }
+
+        /* Footer / Share Section */
+        .footer-section {
+            text-align: center;
+            padding: 40px 0 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+
+        .credit {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .credit a {
+            color: var(--text-primary);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--text-secondary);
+        }
+
+        .credit a:hover {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
+
+        /* Utility */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 16px;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero .tagline {
+                font-size: 1rem;
+            }
+            .calculators-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .card-title {
+                font-size: 1.5rem;
+            }
+            .card-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .calculator-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="emoji">🧮✨</div>
+            <h1>Smart Financial Calculators</h1>
+            <div class="tagline">Plan your investments, track returns, beat inflation — all in one place.</div>
+        </div>
+
+        <div class="calculators-grid">
+            <!-- SIP Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/sip/" class="calculator-card card-sip" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">📈🚀</div>
+                    <div class="card-title">SIP Calculator</div>
+                </div>
+                <div class="card-description">
+                    Systematic Investment Plan — Build wealth with monthly investments. Includes inflation adjustment and step-up options.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Monthly SIP</span>
+                    <span class="tag">Step-up</span>
+                    <span class="tag">Inflation adjusted</span>
+                    <span class="tag">PDF report</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+
+            <!-- SWP Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/swp/" class="calculator-card card-swp" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">💸🏖️</div>
+                    <div class="card-title">SWP Calculator</div>
+                </div>
+                <div class="card-description">
+                    Systematic Withdrawal Plan — Create a regular income stream from your corpus. Perfect for retirement planning.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Monthly withdrawal</span>
+                    <span class="tag">Step-up</span>
+                    <span class="tag">Corpus depletion</span>
+                    <span class="tag">PDF export</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+
+            <!-- CAGR Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/cagr/" class="calculator-card card-cagr" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">📈🚀</div>
+                    <div class="card-title">CAGR Calculator</div>
+                </div>
+                <div class="card-description">
+                    Compound Annual Growth Rate — Measure your investment's true annualized return, smoothing out volatility.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Annualized return</span>
+                    <span class="tag">Growth tracking</span>
+                    <span class="tag">Yearly breakdown</span>
+                    <span class="tag">PDF report</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+
+            <!-- Inflation Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/inflation/" class="calculator-card card-inflation" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">📉💸</div>
+                    <div class="card-title">Inflation Calculator</div>
+                </div>
+                <div class="card-description">
+                    See how inflation erodes your purchasing power. Calculate future value or present value with ease.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Future value</span>
+                    <span class="tag">Present value</span>
+                    <span class="tag">Purchasing power</span>
+                    <span class="tag">PDF download</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+
+            <!-- IRR Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/irr/" class="calculator-card card-irr" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">📊💰</div>
+                    <div class="card-title">IRR Calculator</div>
+                </div>
+                <div class="card-description">
+                    Internal Rate of Return — Evaluate investments with regular periodic cash flows. Perfect for project evaluation.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Periodic returns</span>
+                    <span class="tag">Cash flow analysis</span>
+                    <span class="tag">Investment ranking</span>
+                    <span class="tag">PDF export</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+
+            <!-- XIRR Calculator -->
+            <a href="https://bhuvanesh-m-dev.github.io/calculator/xirr/" class="calculator-card card-xirr" target="_blank" rel="noopener noreferrer">
+                <div class="card-header">
+                    <div class="card-icon">📅💰</div>
+                    <div class="card-title">XIRR Calculator</div>
+                </div>
+                <div class="card-description">
+                    Extended Internal Rate of Return — Track returns for irregular cash flows like mutual fund SIPs & redemptions.
+                </div>
+                <div class="card-tags">
+                    <span class="tag">Irregular cash flows</span>
+                    <span class="tag">Date-wise returns</span>
+                    <span class="tag">SIP performance</span>
+                    <span class="tag">PDF report</span>
+                </div>
+                <div class="arrow-link">
+                    Calculate Now <span>→</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="footer-section">
+            <div class="credit">
+                Made with 💙 by <a href="https://bhuvanesh-m-dev.github.io/" target="_blank" rel="noopener noreferrer">Bhuvanesh</a> | 
+                Smart tools for smarter financial decisions | 
+                <a href="#" id="shareAllBtn">🔗 Share this page</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple share functionality for the homepage
+        const shareBtn = document.getElementById('shareAllBtn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = window.location.href;
+                const text = `Check out these amazing financial calculators — SIP, SWP, CAGR, IRR, XIRR, Inflation 📊💰\n\n${url}`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Smart Financial Calculators',
+                        text: 'Plan your investments with these powerful tools',
+                        url: url
+                    }).catch(() => {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        }
+
+        function fallbackCopy(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Link copied to clipboard! Share it with your friends.');
+            }).catch(() => {
+                prompt('📋 Copy this link to share:', window.location.href);
+            });
+        }
+
+        // Add subtle animation on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.calculator-card');
+            cards.forEach((card, index) => {
+                card.style.animation = `fadeInUp 0.5s ease-out ${index * 0.05}s forwards`;
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+            });
+            
+            // Apply animation style
+            const style = document.createElement('style');
+            style.textContent = `
+                .calculator-card {
+                    animation: fadeInUp 0.5s ease-out forwards;
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                @keyframes fadeInUp {
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+    <!-- Visitor counter (optional, same as your other pages for consistency) -->
+    <img src="https://count.getloli.com/@bhuvanesh-m-dev?name=bhuvanesh-m-dev-calculator-home&theme=ai-1&padding=0&offset=0&align=top&scale=0.1&pixelated=1&darkmode=auto" width="1" height="1" alt="" style="position:absolute;visibility:hidden;" />
+</body>
+</html>
